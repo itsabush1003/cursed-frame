@@ -8,6 +8,7 @@ require (
 	connectrpc.com/validate v0.6.0
 	github.com/go-pkgz/routegroup v1.6.0
 	github.com/google/uuid v1.6.0
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	golang.org/x/time v0.14.0
 	google.golang.org/protobuf v1.36.11
@@ -20,7 +21,6 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/cel-go v0.26.1 // indirect
-	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
