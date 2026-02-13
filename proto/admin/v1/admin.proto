@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "common/v1/common.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/itsuabush1003/cursed-frame/backend/golang/internal/gen/admin/v1;adminv1";
+
+message RegistAdminUserResponse {
+  string token = 1;
+  string secret = 2;
+}
+
+message User {
+  string user_id = 1;
+  string user_name = 2;
+  uint32 team_id = 3;
+  bool is_ready = 4;
+}
+
+message OpenEntryResponse {
+  repeated User entered_users = 1;
+  int32 expected_user_num = 2;
+}
+
+message RejectUserRequest {
+  string user_id = 1;
+}
+
+message ChangeTeamRequest {
+  string user_id = 1;
+  uint32 new_team_id = 2;
+}
+
+message StartQuestResponse {
+  string target_user_image_id = 1;
+  uint32 target_team_id = 2;
+  uint32 question_id = 3;
+  string question = 4;
+  repeated common.v1.Choice choices = 5;
+  int32 last_time = 6;
+  string hint_text = 7;
+}
+
+message TeamAnswer {
+  uint32 team_id = 1;
+  common.v1.Choice answer = 2;
+  bool is_correct = 3;
+}
+
+message CheckAnswersResponse {
+  repeated TeamAnswer answers = 1;
+}
+
+message UserStats {
+  string user_name = 1;
+  float correct_rate = 2;
+  uint32 personal_order = 3;
+}
+
+message TeamStats {
+  uint32 team_id = 1;
+  repeated UserStats members_stats = 2;
+  float team_correct_rate = 3;
+  uint32 team_order = 4;
+}
+
+message EndQuestResponse {
+  common.v1.Result result = 1;
+  repeated TeamStats stats = 2;
+}
+
+service AdminService {
+  rpc RegistAdminUser(google.protobuf.Empty) returns (RegistAdminUserResponse);
+  rpc OpenEntry(google.protobuf.Empty) returns (stream OpenEntryResponse);
+  rpc CloseEntry(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc RejectUser(RejectUserRequest) returns (google.protobuf.Empty);
+  rpc ChangeTeam(ChangeTeamRequest) returns (google.protobuf.Empty);
+  rpc StartQuest(google.protobuf.Empty) returns (stream StartQuestResponse);
+  rpc CheckAnswers(google.protobuf.Empty) returns (CheckAnswersResponse);
+  rpc NextQuiz(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc EndQuest(google.protobuf.Empty) returns (EndQuestResponse);
+}

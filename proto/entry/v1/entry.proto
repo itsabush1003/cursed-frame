@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package entry.v1;
+
+import "buf/validate/validate.proto";
+
+option go_package = "github.com/itsuabush1003/cursed-frame/backend/golang/internal/gen/entry/v1;entryv1";
+
+message EntryRequest {
+  string user_name = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+message EntryResponse {
+  string user_id = 1 [(buf.validate.field).string.pattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[4][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"];
+  string access_token = 2;
+  string secret = 3;
+}
+
+message ReconnectRequest {
+  string user_id = 1 [(buf.validate.field).string.pattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[4][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"];
+  string secret = 2;
+}
+
+message ReconnectResponse {
+  string access_token = 1;
+}
+
+// Service definition
+service EntryService {
+  rpc Entry(EntryRequest) returns (EntryResponse);
+  rpc Reconnect(ReconnectRequest) returns (ReconnectResponse);
+}

@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package quest.v1;
+
+import "common/v1/common.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/itsuabush1003/cursed-frame/backend/golang/internal/gen/quest/v1;questv1";
+
+message StartQuestResponse {
+  string target_user_image_id = 1;
+  uint32 target_team_id = 2;
+  uint32 question_id = 3;
+  string question = 4;
+  repeated common.v1.Choice choices = 5;
+  bool can_answer = 6;
+  bool is_target = 7;
+  int32 last_time = 8;
+}
+
+message AnswerRequest {
+  uint32 question_id = 1;
+  common.v1.Choice answer = 2;
+}
+
+message AnswerResponse {
+  bool is_correct = 1;
+  common.v1.Choice team_answer = 2;
+  repeated int32 answer_count = 3;
+}
+
+message TakeHintRequest {
+  string hint = 1;
+}
+
+message GetResultResponse {
+  common.v1.Result result = 1;
+  uint32 team_order = 2;
+  uint32 personal_order = 3;
+  float personal_rate = 4;
+}
+
+service QuestService {
+  rpc StartQuest(google.protobuf.Empty) returns (stream StartQuestResponse);
+  rpc Answer(AnswerRequest) returns (AnswerResponse);
+  rpc TakeHint(TakeHintRequest) returns (google.protobuf.Empty);
+  rpc GetResult(google.protobuf.Empty) returns (GetResultResponse);
+}

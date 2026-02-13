@@ -1,0 +1,15 @@
+version: v2
+plugins:
+  - local: protoc-gen-go
+    out: ../backend/golang/internal/gen
+    opt: paths=source_relative
+  - local: protoc-gen-connect-go
+    out: ../backend/golang/internal/gen
+    opt: paths=source_relative
+  - local: ["bun", "run", "--bun", "../frontend/react/cursed-frame/node_modules/@bufbuild/protoc-gen-es/bin/protoc-gen-es"]
+    out: ../frontend/react/cursed-frame/src/gen
+    include_imports: true
+    opt: target=ts
+  - local: ["bun", "run", "--bun", "../frontend/react/cursed-frame/node_modules/@bufbuild/protoc-gen-connect-query/bin/protoc-gen-connect-query"]
+    out: ../frontend/react/cursed-frame/src/gen
+    opt: target=ts

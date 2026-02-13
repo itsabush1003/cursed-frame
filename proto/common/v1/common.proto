@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package common.v1;
+
+option go_package = "github.com/itsuabush1003/cursed-frame/backend/golang/internal/gen/common/v1;commonv1";
+
+message Choice {
+  uint32 choice_id = 1;
+  string choice_text = 2;
+}
+
+enum Result {
+  UNSPECIFIED = 0;
+  PERFECT = 1;
+  EXCELLENT = 2;
+  GREAT = 3;
+  GOODJOB = 4;
+  CLEAR = 5;
+  FAILED = 6;
+}
