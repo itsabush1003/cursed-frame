@@ -99,19 +99,24 @@ func (db *SQLiteDB) Command(dbName string, req repository.WriteRequest) {
 }
 
 func (db *SQLiteDB) Query(dbName string, sql string, params ...any) (*sqlx.Rows, error) {
-	return db.connections[dbName][Read].Queryx(sql, params)
+	return db.connections[dbName][Read].NamedQuery(sql, params)
 }
 
 func (db *SQLiteDB) QueryRow(dbName string, sql string, params ...any) *sqlx.Row {
-	return db.connections[dbName][Read].QueryRowx(sql, params)
+	query, newParams, err := sqlx.Named(sql, params)
+	if err != nil {
+		// 空のRowを返してしまうとErrNoRowsが出て処理上都合の悪い場合があるのと、エラーの内容が完全に消えてしまうので、エラーを詰めたRowを返す
+		return db.connections[dbName][Read].QueryRowx("SELECT ?", err.Error())
+	}
+	return db.connections[dbName][Read].QueryRowx(query, newParams...)
 }
 
 func (db *SQLiteDB) QueryIn(dbName string, sql string, params ...any) (*sqlx.Rows, error) {
-	query, newParams, err := sqlx.In(sql, params)
+	query, newParams, err := sqlx.In(sql, params...)
 	if err != nil {
 		return nil, err
 	}
-	return db.connections[dbName][Read].Queryx(query, newParams)
+	return db.connections[dbName][Read].Queryx(query, newParams...)
 }
 
 func NewSQLiteDB(dbFileDir string) (*SQLiteDB, error) {
@@ -152,7 +157,7 @@ func NewSQLiteDB(dbFileDir string) (*SQLiteDB, error) {
 	queues := sync.OnceValue(func() map[string]chan<- repository.WriteRequest {
 		batchSize := 10
 		queueMap := make(map[string]chan<- repository.WriteRequest, len(databases)-1)
-		for db, _ := range databases {
+		for db := range databases {
 			// Masterは起動時以外書き込む必要が無いのでスキップ
 			if db == "Master" {
 				continue

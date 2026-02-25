@@ -290,8 +290,9 @@ func (ur *UserRepository) RemoveUser(uid uuid.UUID) error {
 	return nil
 }
 
-func NewUserRepository(c *cache.Cache) *UserRepository {
+func NewUserRepository(c *cache.Cache, db IDatabase) *UserRepository {
 	return &UserRepository{
-		c: c,
+		c:  c,
+		db: db,
 	}
 }

@@ -74,7 +74,7 @@ func main() {
 	// 初期化 TODO: DIにする
 	fileHandler := filecontroller.NewStaticFileHandler(http.FS(dist))
 	c := cache.New(10*time.Minute, 30*time.Minute)
-	userRepository := repository.NewUserRepository(c)
+	userRepository := repository.NewUserRepository(c, database)
 	authorizeMiddleware := middleware.NewAuthorizeMiddleware(userRepository)
 	corsMiddleware := middleware.NewCorsMiddleware()
 	rateLimitMiddleware := middleware.NewRateLimitMiddleware(userNum)
