@@ -11,15 +11,15 @@ import (
 
 type ImageUploadUsecase struct {
 	imgDirName string
-	uir IUserImageRepository
+	uir        IUserImageRepository
 }
 
 func (iuu *ImageUploadUsecase) Execute(fileSrc io.Reader, uid uuid.UUID) error {
-	filaName, err := util.CreateRandStr(8)
+	fileName, err := util.CreateRandStr(8)
 	if err != nil {
 		return err
 	}
-	fileDest, err := os.Create(fmt.Sprintf("%s/%s.jpg", iuu.imgDirName, filaName))
+	fileDest, err := os.Create(fmt.Sprintf("%s/%s.jpg", iuu.imgDirName, fileName))
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (iuu *ImageUploadUsecase) Execute(fileSrc io.Reader, uid uuid.UUID) error {
 		return err
 	}
 
-	iuu.uir.Save(uid, filaName)
+	iuu.uir.Save(uid, fileName)
 
 	return nil
 }
@@ -37,6 +37,6 @@ func (iuu *ImageUploadUsecase) Execute(fileSrc io.Reader, uid uuid.UUID) error {
 func NewImageUploadUsecase(imgDirName string, uir IUserImageRepository) *ImageUploadUsecase {
 	return &ImageUploadUsecase{
 		imgDirName: imgDirName,
-		uir: uir,
+		uir:        uir,
 	}
 }
