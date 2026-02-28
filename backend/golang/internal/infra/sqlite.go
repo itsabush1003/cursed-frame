@@ -24,6 +24,13 @@ const (
 	QuestionTable string = "ProfileQuestion"
 )
 
+var migrations map[string]string = map[string]string{
+	UserTable:     fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(user_id TEXT PRIMARY KEY, name TEXT, access_token TEXT, team_id INTEGER, is_ready BOOLEAN, version INTEGER);", UserTable),
+	ImageTable:    fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(user_id TEXT PRIMARY KEY, image_id TEXT);", ImageTable),
+	ProfileTable:  fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(user_id TEXT, profile_id INTEGER, answer TEXT, PRIMARY KEY(user_id, profile_id));", ProfileTable),
+	QuestionTable: fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(question_id INTEGER PRIMARY KEY, question_text TEXT, quiz_text TEXT, sample_answer TEXT);", QuestionTable),
+}
+
 var databases map[string][]string = map[string][]string{
 	"User": []string{UserTable},
 	"UserAttribute": []string{
