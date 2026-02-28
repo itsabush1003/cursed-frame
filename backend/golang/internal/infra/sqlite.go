@@ -128,29 +128,25 @@ func (db *SQLiteDB) QueryIn(dbName string, sql string, params ...any) (*sqlx.Row
 
 func NewSQLiteDB(dbFileDir string) (*SQLiteDB, error) {
 	connections := make(map[string]map[Mode]*sqlx.DB, len(databases))
+	clearConnections := func() {
+		// 途中で失敗した場合に過去に生成済みのものをcloseする
+		for _, conns := range connections {
+			for _, con := range conns {
+				con.Close()
+			}
+		}
+	}
 	for dbName := range databases {
 		connections[dbName] = make(map[Mode]*sqlx.DB, 2)
 		reader, err := sqlx.Open("sqlite", fmt.Sprintf("file:%s/%s.db?%s", dbFileDir, dbName, ReadOnlyDsnOption))
 		if err != nil {
-			// 途中で失敗した場合に過去に生成済みのものもcloseする
-			for _, conn := range connections {
-				if conn != nil {
-					conn[Read].Close()
-					conn[Write].Close()
-				}
-			}
+			clearConnections()
 			os.RemoveAll(dbFileDir)
 			return nil, err
 		}
 		writer, err := sqlx.Open("sqlite", fmt.Sprintf("file:%s/%s.db?%s", dbFileDir, dbName, ReadWriteDsnOption))
 		if err != nil {
-			// 途中で失敗した場合に過去に生成済みのものもcloseする
-			for _, conn := range connections {
-				if conn != nil {
-					conn[Read].Close()
-					conn[Write].Close()
-				}
-			}
+			clearConnections()
 			reader.Close()
 			os.RemoveAll(dbFileDir)
 			return nil, err
@@ -158,6 +154,18 @@ func NewSQLiteDB(dbFileDir string) (*SQLiteDB, error) {
 		writer.SetMaxOpenConns(1)
 		connections[dbName][Read] = reader
 		connections[dbName][Write] = writer
+
+		// 初期化処理
+		for _, table := range databases[dbName] {
+			if _, err = connections[dbName][Write].Exec(migrations[table]); err != nil {
+				break
+			}
+		}
+		if err != nil {
+			clearConnections()
+			os.RemoveAll(dbFileDir)
+			return nil, err
+		}
 	}
 
 	// 書き込みキューをデータベースにつき１つに限定したいのでOnceValueで作る
