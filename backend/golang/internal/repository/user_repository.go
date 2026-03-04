@@ -44,7 +44,7 @@ func (ur *DBUserRow) UpdateChangedColumns(user *model.User) []string {
 	}
 	if ur.IsReady != user.GetIsReady() {
 		ur.IsReady = user.GetIsReady()
-		changed = append(changed, "is_changed")
+		changed = append(changed, "is_ready")
 	}
 	if len(changed) > 0 {
 		// DB上の値と何かしらの差分があった場合のみ、バージョンを上げてDBを更新する

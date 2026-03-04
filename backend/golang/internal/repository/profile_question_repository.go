@@ -15,7 +15,7 @@ type ProfileQuestionRepository struct {
 
 func (pqr *ProfileQuestionRepository) FetchByQuestionID(questionID uint) (*model.ProfileQuestion, error) {
 	dbQuestion := DBQuestionRow{}
-	if err := pqr.db.QueryRow("Master", "SELECT * FROM ProfileQuestion WHERE user_id = :user_id", DBQuestionRow{
+	if err := pqr.db.QueryRow("Master", "SELECT * FROM ProfileQuestion WHERE question_id = :question_id", DBQuestionRow{
 		QuestionID: int(questionID),
 	}).StructScan(&dbQuestion); err != nil {
 		return nil, err

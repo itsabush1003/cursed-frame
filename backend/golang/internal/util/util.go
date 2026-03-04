@@ -14,7 +14,7 @@ func CreateRandStr(length int) (string, error) {
 		return "", err
 	}
 
-	// 16進数文字列に変換し、ベースディレクトリと結合
+	// URLでも使えるランダムな文字列に
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
 

@@ -8,8 +8,7 @@ type SetReadyUsecase struct {
 
 func (sru *SetReadyUsecase) Execute(user *model.User) error {
 	user.SetReady()
-	sru.ur.Save(user)
-	return nil
+	return sru.ur.Save(user)
 }
 
 func NewSetReadyUsecase(ur IUserRepository) *SetReadyUsecase {
