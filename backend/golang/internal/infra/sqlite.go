@@ -2,10 +2,13 @@ package infra
 
 import (
 	"database/sql"
+	"encoding/csv"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -24,11 +27,80 @@ const (
 	QuestionTable string = "ProfileQuestion"
 )
 
+type column struct {
+	Name       string
+	Type       string
+	Constraint string
+}
+
+func (c column) Definition() string {
+	if c.Name == "" || c.Type == "" {
+		return ""
+	}
+	str := fmt.Sprintf("%s %s", c.Name, c.Type)
+	if c.Constraint != "" {
+		str = str + " " + c.Constraint
+	}
+	return str
+}
+
+type columns struct {
+	Columns []column
+}
+
+func (cols columns) ColNames() []string {
+	f := func(yield func(v string) bool) {
+		for _, c := range cols.Columns {
+			if !yield(c.Name) {
+				return
+			}
+		}
+	}
+	return slices.Collect(f)
+}
+
+func (cols columns) toDDL() string {
+	f := func(yield func(v string) bool) {
+		for _, c := range cols.Columns {
+			if !yield(c.Definition()) {
+				return
+			}
+		}
+	}
+	return strings.Join(slices.Collect(f), ", ")
+}
+
+var columnMap map[string]columns = map[string]columns{
+	UserTable: columns{Columns: []column{
+		{Name: "user_id", Type: "TEXT", Constraint: "PRIMARY KEY"},
+		{Name: "name", Type: "TEXT"},
+		{Name: "access_token", Type: "TEXT", Constraint: "UNIQUE"},
+		{Name: "team_id", Type: "INTEGER"},
+		{Name: "is_ready", Type: "BOOLEAN"},
+		{Name: "version", Type: "INTEGER"},
+	}},
+	ImageTable: columns{Columns: []column{
+		{Name: "user_id", Type: "TEXT", Constraint: "PRIMARY KEY"},
+		{Name: "image_id", Type: "TEXT", Constraint: "UNIQUE"},
+	}},
+	ProfileTable: columns{Columns: []column{
+		{Name: "user_id", Type: "TEXT"},
+		{Name: "profile_id", Type: "INTEGER"},
+		{Name: "answer", Type: "TEXT"},
+	}},
+	QuestionTable: columns{Columns: []column{
+		{Name: "question_id", Type: "INTEGER", Constraint: "PRIMARY KEY"},
+		{Name: "question_text", Type: "TEXT"},
+		{Name: "quiz_text", Type: "TEXT"},
+		{Name: "sample_answer", Type: "TEXT"},
+	}},
+}
+
 var migrations map[string]string = map[string]string{
-	UserTable:     fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(user_id TEXT PRIMARY KEY, name TEXT, access_token TEXT, team_id INTEGER, is_ready BOOLEAN, version INTEGER);", UserTable),
-	ImageTable:    fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(user_id TEXT PRIMARY KEY, image_id TEXT);", ImageTable),
-	ProfileTable:  fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(user_id TEXT, profile_id INTEGER, answer TEXT, PRIMARY KEY(user_id, profile_id));", ProfileTable),
-	QuestionTable: fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(question_id INTEGER PRIMARY KEY, question_text TEXT, quiz_text TEXT, sample_answer TEXT);", QuestionTable),
+	UserTable:     fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(%s);", UserTable, columnMap[UserTable].toDDL()),
+	ImageTable:    fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(%s);", ImageTable, columnMap[ImageTable].toDDL()),
+	ProfileTable:  fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(%s, PRIMARY KEY(user_id, profile_id));", ProfileTable, columnMap[ProfileTable].toDDL()),
+	QuestionTable: fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(%s);", QuestionTable, columnMap[QuestionTable].toDDL()),
 }
 
 var databases map[string][]string = map[string][]string{
@@ -126,7 +198,70 @@ func (db *SQLiteDB) QueryIn(dbName string, sql string, params ...any) (*sqlx.Row
 	return db.connections[dbName][Read].Queryx(query, newParams...)
 }
 
-func NewSQLiteDB(dbFileDir string) (*SQLiteDB, error) {
+func readXSVFile(file fs.File) (header []string, body [][]string, err error) {
+	reader := csv.NewReader(file)
+	rows, err := reader.ReadAll()
+	if err != nil {
+		return nil, nil, err
+	}
+	header = rows[0]
+	body = rows[1:]
+	return header, body, nil
+}
+
+func createValueMap(header []string, body [][]string, columns columns) []map[string]any {
+	values := make([]map[string]any, 0, len(body))
+	colNames := columns.ColNames()
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	for _, row := range body {
+		// 過剰な最適化説もあるけどやっておく
+		wg.Go(func() {
+			valueMap := make(map[string]any, len(colNames))
+			for i, col := range colNames {
+				idx := slices.Index(header, col)
+				switch columns.Columns[i].Type {
+				case "INTEGER":
+					if idx < 0 {
+						valueMap[col] = 0
+						continue
+					}
+					n, err := strconv.Atoi(row[idx])
+					if err != nil {
+						n = 0
+					}
+					valueMap[col] = n
+				case "BOOLEAN":
+					// BOOLEANってSQLiteには無いらしいけど動くし分かりやすいからこのままで
+					if idx < 0 {
+						valueMap[col] = false
+						continue
+					}
+					b, err := strconv.ParseBool(row[idx])
+					if err != nil {
+						b = false
+					}
+					valueMap[col] = b
+				case "TEXT":
+					if idx < 0 {
+						valueMap[col] = ""
+						continue
+					}
+					valueMap[col] = row[idx]
+				default:
+					valueMap[col] = nil
+				}
+			}
+			mu.Lock()
+			defer mu.Unlock()
+			values = append(values, valueMap)
+		})
+	}
+	wg.Wait()
+	return values
+}
+
+func NewSQLiteDB(dbFileDir string, dbSources fs.FS) (*SQLiteDB, error) {
 	connections := make(map[string]map[Mode]*sqlx.DB, len(databases))
 	clearConnections := func() {
 		// 途中で失敗した場合に過去に生成済みのものをcloseする
@@ -135,6 +270,14 @@ func NewSQLiteDB(dbFileDir string) (*SQLiteDB, error) {
 				con.Close()
 			}
 		}
+	}
+	readSourceFile := func(fileName string) ([]string, [][]string, error) {
+		file, err := dbSources.Open(fileName)
+		if err != nil {
+			return nil, nil, err
+		}
+		defer file.Close()
+		return readXSVFile(file)
 	}
 	for dbName := range databases {
 		connections[dbName] = make(map[Mode]*sqlx.DB, 2)
@@ -155,10 +298,23 @@ func NewSQLiteDB(dbFileDir string) (*SQLiteDB, error) {
 		connections[dbName][Read] = reader
 		connections[dbName][Write] = writer
 
-		// 初期化処理
+		// DB初期化処理
 		for _, table := range databases[dbName] {
 			if _, err = connections[dbName][Write].Exec(migrations[table]); err != nil {
 				break
+			}
+			filePath := fmt.Sprintf("%s/%s.csv", dbName, table)
+			if match, err := fs.Glob(dbSources, filePath); err == nil && match != nil {
+				header, body, err := readSourceFile(filePath)
+				if err != nil {
+					break
+				}
+				colNames := columnMap[table].ColNames()
+				query := fmt.Sprintf("INSERT INTO %s(%s) VALUES (%s);", table, strings.Join(colNames, ", "), ":"+strings.Join(colNames, ", :"))
+				values := createValueMap(header, body, columnMap[table])
+				if _, err := connections[dbName][Write].NamedExec(query, values); err != nil {
+					break
+				}
 			}
 		}
 		if err != nil {

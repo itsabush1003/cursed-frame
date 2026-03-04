@@ -31,6 +31,9 @@ var teamNum int
 //go:embed dist/*
 var staticFiles embed.FS
 
+//go:embed migration/*
+var dbSourceFiles embed.FS
+
 func init() {
 	flag.IntVar(&userNum, "N", 6, "総参加者数")
 	flag.IntVar(&teamNum, "T", 2, "参加者を振り分けるチーム数")
@@ -63,9 +66,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	dbSource, err := fs.Sub(dbSourceFiles, "migration")
+	if err != nil {
+		panic(err)
+	}
 
 	gameManager := core.NewGameManager(userNum, teamNum)
-	database, err := infra.NewSQLiteDB(dbDirname)
+	database, err := infra.NewSQLiteDB(dbDirname, dbSource)
 	if err != nil {
 		panic(err)
 	}
