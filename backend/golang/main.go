@@ -115,6 +115,9 @@ func main() {
 	adminServiceHandler := rpccontroller.NewAdminServiceHandler(openEntryUsecase, closeEntryUsecase, rejectUserUsecase, changeTeamUsecase, adminStartQuestUsecase, checkAnswersUsecase, nextQuizUsecase, endQuestUsecase)
 	router := infra.NewRouter(fileHandler, imageHandler, entryServiceHandler, lobbyServiceHandler, questServiceHandler, adminServiceHandler, authorizeMiddleware, rateLimitMiddleware, corsMiddleware)
 
+	server := infra.NewServer(":8888", router)
 	println(fmt.Sprintf("Server started at :8888%s\n\tguest: %s", router.AdminPath, router.GuestPath))
-	http.ListenAndServe(":8888", router)
+	if err = server.ListenAndServe(); err != nil {
+		panic(err)
+	}
 }
