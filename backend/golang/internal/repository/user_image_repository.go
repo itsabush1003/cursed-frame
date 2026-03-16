@@ -12,7 +12,7 @@ func (uir *UserImageRepository) Save(uid uuid.UUID, imageID string) error {
 		Table:   "UserImage",
 		Method:  Insert,
 		Targets: []string{"user_id", "image_id"},
-		Params: map[string]string{
+		Params: map[string]any{
 			"user_id":  uid.String(),
 			"image_id": imageID,
 		},

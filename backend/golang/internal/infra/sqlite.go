@@ -178,16 +178,38 @@ func (db *SQLiteDB) Command(dbName string, req repository.WriteRequest) {
 }
 
 func (db *SQLiteDB) Query(dbName string, sql string, params ...any) (*sqlx.Rows, error) {
-	return db.connections[dbName][Read].NamedQuery(sql, params)
+	// paramsが空の場合はそのままSQLを実行
+	if len(params) == 0 {
+		return db.connections[dbName][Read].Queryx(sql)
+	}
+
+	// SQLに名前付きパラメータ(:)が含まれている場合はNamedQueryを使用
+	// sqlxではPostgreSQL用に::の対応があるが、今はSQLite用なので対応しない
+	if strings.Contains(sql, ":") {
+		return db.connections[dbName][Read].NamedQuery(sql, params)
+	}
+
+	// 通常のプレースホルダ(?)の場合は通常のQueryxを使用
+	return db.connections[dbName][Read].Queryx(sql, params...)
 }
 
 func (db *SQLiteDB) QueryRow(dbName string, sql string, params ...any) *sqlx.Row {
-	query, newParams, err := sqlx.Named(sql, params)
-	if err != nil {
-		// 空のRowを返してしまうとErrNoRowsが出て処理上都合の悪い場合があるのと、エラーの内容が完全に消えてしまうので、エラーを詰めたRowを返す
-		return db.connections[dbName][Read].QueryRowx("SELECT ?", err.Error())
+	// paramsが空の場合はsqlx.Namedがエラーを返してしまうのでそのままSQLを実行
+	if len(params) == 0 {
+		return db.connections[dbName][Read].QueryRowx(sql)
 	}
-	return db.connections[dbName][Read].QueryRowx(query, newParams...)
+
+	// SQLに名前付きパラメータ(:)が含まれている場合はNamedQueryを使用
+	// sqlxではPostgreSQL用に::の対応があるが、今はSQLite用なので対応しない
+	if strings.Contains(sql, ":") {
+		query, newParams, err := sqlx.Named(sql, params)
+		if err != nil {
+			// 空のRowを返してしまうとErrNoRowsが出て処理上都合の悪い場合があるのと、エラーの内容が完全に消えてしまうので、エラーを詰めたRowを返す
+			return db.connections[dbName][Read].QueryRowx("SELECT ?", err.Error())
+		}
+		sql, params = query, newParams
+	}
+	return db.connections[dbName][Read].QueryRowx(sql, params...)
 }
 
 func (db *SQLiteDB) QueryIn(dbName string, sql string, params ...any) (*sqlx.Rows, error) {
