@@ -46,7 +46,7 @@ func (upr *UserProfileRepository) FetchByProfileIDWithUserGroup(pid uint, users 
 	for _, uid := range users {
 		uidList = append(uidList, uid.String())
 	}
-	rows, err := upr.db.QueryIn("UserAttribute", "SELECT * FROM UserProfile WHERE user_id in (?) AND profile_id = :profile_id", uidList, DBProfileRow{ProfileID: int(pid)})
+	rows, err := upr.db.QueryIn("UserAttribute", "SELECT * FROM UserProfile WHERE user_id in (?) AND profile_id = ?", uidList, int(pid))
 	if err != nil {
 		return nil, err
 	}
