@@ -9,7 +9,8 @@ plugins:
   - local: ["bun", "run", "--bun", "../frontend/react/cursed-frame/node_modules/@bufbuild/protoc-gen-es/bin/protoc-gen-es"]
     out: ../frontend/react/cursed-frame/src/gen
     include_imports: true
-    opt: target=ts
+    include_wkt: true
+    opt: target=ts,ts_nocheck=true
   - local: ["bun", "run", "--bun", "../frontend/react/cursed-frame/node_modules/@bufbuild/protoc-gen-connect-query/bin/protoc-gen-connect-query"]
     out: ../frontend/react/cursed-frame/src/gen
     opt: target=ts

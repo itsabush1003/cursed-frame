@@ -1,0 +1,103 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #222C56;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --main-color-1: #222c56;
+  --main-color-1-light: #515B84;
+  --main-color-1-dark: #050b26;
+  --main-color-2: #e6b8df;
+  --main-color-2-light: #fde6eb;
+  --main-color-2-dark: #ae5ba1;
+  --sub-color-1-1: #322156;
+  --sub-color-1-1-light: #615085;
+  --sub-color-1-1-dark: #0f0426;
+  --sub-color-1-2: #1a434f;
+  --sub-color-1-2-light: #456d78;
+  --sub-color-1-2-dark: #011b23;
+  --sub-color-2-1: #f8c6d2;
+  --sub-color-2-1-light: #fde6eb;
+  --sub-color-2-1-dark: #e37690;
+  --sub-color-2-2: #cebae4;
+  --sub-color-2-2-light: #ebe1f6;
+  --sub-color-2-2-dark: #815da7;
+  --comp-color-1: #7e6427;
+  --comp-color-1-light: #c2a86d;
+  --comp-color-1-dark: #382700;
+  --comp-color-2: #f1fbc9;
+  --comp-color-2-light: #f9fee7;
+  --comp-color-2-dark: #d4ec7b;
+}
+
+#root {
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 0;
+  text-align: center;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  color: white;
+  background-color: var(--sub-color-1-2);
+  cursor: pointer;
+  transition: border-color 0.25s;
+  pointer-events: auto;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: black;
+    background-color: var(--main-color-2-light);
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    color: black;
+    background-color: var(--sub-color-2-2-light);
+  }
+}
