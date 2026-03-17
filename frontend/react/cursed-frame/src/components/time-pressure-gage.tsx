@@ -6,7 +6,7 @@ export const TimePressureGage = ({ remainTime }: { remainTime: number }) => {
   const proportion = Math.max(Math.min(remainTime / MaxRemainTime, 1), 0);
 
   return (
-    <div style={{ width: "100%", height: "1em", position: "relative" }}>
+    <div css={baseStyle}>
       <div css={gageStyle} style={{ width: `${proportion * 100}%` }} />
       <div css={numeralStyle}>
         {remainTime > 0 ? remainTime.toFixed(1) : 0.0}
@@ -14,6 +14,15 @@ export const TimePressureGage = ({ remainTime }: { remainTime: number }) => {
     </div>
   );
 };
+
+const baseStyle = css`
+  width: 100%;
+  height: 1.5em;
+  position: relative;
+  font-size: max(medium, smaller);
+  flex-shrink: 0;
+  flex-grow: 0;
+`;
 
 const gageStyle = css`
   position: absolute;

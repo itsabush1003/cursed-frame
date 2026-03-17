@@ -26,7 +26,6 @@ const ResultPage = () => {
   const { userStatus } = useContext(UserStatusContext);
   const [result, setResult] = useState<Result>(Result.UNSPECIFIED);
   const [stats, setStats] = useState<TeamStats[]>([]);
-  const [teamOrder, setTeamOrder] = useState<number>(0);
   const client = useRpcClient();
   const callResultApi = useCallback(async () => {
     if ("endQuest" in client) {
@@ -39,6 +38,7 @@ const ResultPage = () => {
           .map((ts) => {
             return {
               teamName: ts.teamId.toString(),
+              teamOrder: ts.teamOrder,
               correctRate: ts.teamCorrectRate,
               memberStats: ts.membersStats.map((ps) => ({
                 name: ps.userName,
@@ -55,6 +55,7 @@ const ResultPage = () => {
       setStats([
         {
           teamName: userStatus.color,
+          teamOrder: response.teamOrder,
           correctRate: 0,
           memberStats: [
             {
@@ -65,7 +66,6 @@ const ResultPage = () => {
           ],
         },
       ]);
-      setTeamOrder(response.teamOrder);
     }
   }, [userStatus.color, client]);
   const { call: getResult, isCalling, error } = useApiCaller(callResultApi);
@@ -76,16 +76,16 @@ const ResultPage = () => {
 
   return (
     <div css={backgroundStyle}>
-      <p>RESULT: {result.toString()}</p>
+      <h2>RESULT: {Result[result]}</h2>
       <Suspense fallback={<LoadingMark />}>
         {!isCalling &&
           (userStatus.type === "admin" ? (
             <TeamStatsPage teamStats={stats} />
           ) : (
             <PersonalStatsPage
-              teamOrder={teamOrder}
-              personalOrder={stats[0].memberStats[0].order}
-              correctRate={stats[0].memberStats[0].correctRate}
+              teamOrder={stats[0]?.teamOrder || 0}
+              personalOrder={stats[0]?.memberStats[0]?.order || 0}
+              correctRate={stats[0]?.memberStats[0]?.correctRate || 0}
             />
           ))}
       </Suspense>

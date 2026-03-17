@@ -88,7 +88,6 @@ function App() {
     window.addEventListener("resize", adjustCanvas);
     return () => window.removeEventListener("resize", adjustCanvas);
   }, [isLoaded, calcCanvasSize]);
-  /*}, [isLoaded, requestFullscreen]);*/
 
   useEffect(() => {
     sendMessage("Director", "SetAudio", Number(isAudioEnable));

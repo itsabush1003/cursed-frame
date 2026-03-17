@@ -44,15 +44,16 @@ export const Choices = ({
   const labelStyle = css`
     display: inline-block;
     box-sizing: border-box;
-    border: 1px solid black;
+    border: 1px solid;
     border-radius: 4px;
+    border-color: var(--comp-color-1);
     background-color: var(--comp-color-1-light);
     color: black;
     cursor: pointer;
     height: ${userStatus.type === "admin" ? "100%" : "20%"};
     width: 100%;
     align-content: center;
-    font-size: ${userStatus.type === "admin" ? "x-large" : "medium"};
+    pointer-events: auto;
 
     &:has(input[type="radio"]:checked) {
       border-width: 3px;
@@ -103,17 +104,18 @@ const guestContainerStyle = css`
   height: 90%;
   width: 100%;
   gap: 2px;
-  pointer-events: auto;
+  flex-shrink: 0;
+  flex-grow: 0;
 `;
 
 const adminContainerStyle = css`
   display: grid; /* 2×2に並べる */
-  grid-template-rows: repeat(2, minmax(20%, 40%));
+  grid-template-rows: repeat(2, 50%);
   grid-template-columns: repeat(2, 50%);
-  justify-content: center;
-  align-content: center;
   align-self: self-end;
-  min-height: 50%;
+  height: 4em;
   width: 100%;
   gap: 5px;
+  flex-shrink: 0;
+  flex-grow: 0;
 `;

@@ -177,7 +177,12 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
         in={showQuiz}
       >
         <div ref={nodeRef} css={animationStyle}>
-          <div css={containerStyle}>
+          <div
+            css={containerStyle}
+            style={{
+              fontSize: userStatus.type === "admin" ? "x-large" : "medium",
+            }}
+          >
             <TimePressureGage remainTime={remainTime} />
             <QuizTextArea text={currentQuiz.quizText} />
             <Choices
@@ -208,30 +213,38 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
 
 const animationStyle = css`
   position: relative;
+  height: calc(90% - 1em);
 
   &.answers-enter {
-    transform: "translateY(50%)";
+    transform: "translateY(100%)";
   }
   &.answers-enter-active {
     transform: "translateY(0)";
     transition-duration: "${uiAnimateDuration}ms";
     transition-property: "transform";
   }
+  &.answers-enter-done {
+    transform: "translateY(0)";
+  }
   &.answers-exit {
     transform: "translateY(0)";
   }
   &.answers-exit-active {
-    transform: "translateY(50%)";
+    transform: "translateY(100%)";
     transition-duration: "${uiAnimateDuration}ms";
     transition-property: "transform";
+  }
+  &.answers-exit-done {
+    transform: "translateY(100%)";
   }
 `;
 
 const containerStyle = css`
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: calc(1em / 4);
-  height: 90%;
+  height: 100%;
 `;
 
 const maskStyle = css`
@@ -242,7 +255,8 @@ const maskStyle = css`
   height: 100%;
   border: none;
   border-radius: 6px;
-  background-color: rgba(64, 64, 64, 0.6);
+  background-color: rgba(64, 64, 64, 0.8);
+  align-content: center;
   z-index: 100;
   pointer-events: all;
 `;

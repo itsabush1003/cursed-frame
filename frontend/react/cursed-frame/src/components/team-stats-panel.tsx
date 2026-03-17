@@ -7,9 +7,12 @@ export interface PersonalStats {
 }
 export interface TeamStats {
   teamName: string;
+  teamOrder: number;
   correctRate: number;
   memberStats: PersonalStats[];
 }
+
+const toPercentString = (rate: number) => (rate * 100).toFixed(1) + "%";
 
 const TeamStatsPanel = ({ teamStats }: { teamStats: TeamStats[] }) => {
   const maxMemberNum = teamStats.reduce((prevMax, ts) => {
@@ -35,17 +38,17 @@ const TeamStatsPanel = ({ teamStats }: { teamStats: TeamStats[] }) => {
         </thead>
         <tbody>
           {teamStats
-            .sort((a, b) => b.correctRate - a.correctRate)
-            .map((ts, idx) => {
+            .sort((a, b) => a.teamOrder - b.teamOrder)
+            .map((ts) => {
               return (
                 <>
                   <tr key={ts.teamName}>
-                    <th rowSpan={2}>{idx}</th>
+                    <th rowSpan={2}>{ts.teamOrder}</th>
                     <td colSpan={Math.floor(maxMemberNum / 2)}>
                       {ts.teamName}
                     </td>
                     <td colSpan={Math.ceil(maxMemberNum / 2)}>
-                      {Math.round(ts.correctRate * 1000) / 10}%
+                      {toPercentString(ts.correctRate)}
                     </td>
                   </tr>
                   <tr>
@@ -54,21 +57,21 @@ const TeamStatsPanel = ({ teamStats }: { teamStats: TeamStats[] }) => {
                       .map((ps) => {
                         return (
                           <td>
-                            <h6>
+                            <h4>
                               {ps.name}
                               {ps.order <= 3 && (
                                 <span
                                   style={{
                                     color: ["gold", "silver", "bronze"][
-                                      ps.order
+                                      ps.order - 1
                                     ],
                                   }}
                                 >
                                   ★
                                 </span>
                               )}
-                            </h6>
-                            <p>{Math.round(ps.correctRate * 1000) / 10}%</p>
+                            </h4>
+                            <p>{toPercentString(ps.correctRate)}</p>
                           </td>
                         );
                       })}
@@ -83,10 +86,13 @@ const TeamStatsPanel = ({ teamStats }: { teamStats: TeamStats[] }) => {
 };
 
 const tableStyle = css`
-  border-color: var(--main-color-2);
+  border-color: var(--sub-color-2-1-light);
+  border-style: solid;
   border-collapse: collapse;
+  border-radius: 6px;
   width: max-content;
   height: max-content;
+  margin: 0 auto;
 
   thead th {
     position: sticky;
@@ -94,7 +100,16 @@ const tableStyle = css`
     z-index: 10;
   }
   thead tr:last-child th {
-    top: 1em;
+    top: 1.5em;
+  }
+  thead tr {
+    background-color: var(--sub-color-2-1-dark);
+  }
+  thead tr:last-child {
+    border-bottom-style: solid;
+  }
+  tbody tr:nth-child(even) {
+    border-bottom-style: dashed;
   }
   th,
   td {
@@ -104,6 +119,7 @@ const tableStyle = css`
   colgroup:first-child {
     position: sticky;
     left: 0;
+    border-right-style: solid;
     z-index: 5;
   }
 `;
