@@ -143,6 +143,9 @@ func (qr *questRoom) CollectAnswer() (map[TeamID]Choice, map[TeamID]map[uint]int
 		wg.Go(func() {
 			res := make([]Choice, 0, len(answers))
 			choiceCounter := make(map[uint]int, MaxChoiceNum)
+			for idx := range MaxChoiceNum {
+				choiceCounter[uint(idx)+1] = 0
+			}
 			for answer := range answers {
 				res = append(res, answer)
 				choiceCounter[answer.ChoiceID]++
@@ -504,13 +507,16 @@ func (gm *GameManager) TakeHint(uid uuid.UUID, hint string) error {
 	}
 }
 
-func (gm *GameManager) Answer(uid uuid.UUID, tid TeamID, answer Choice) (AnswerWithMap, Choice, error) {
+func (gm *GameManager) Answer(uid uuid.UUID, tid TeamID, answer Choice) (AnswerWithMap, bool, error) {
 	if gm.state != INGAME {
-		return AnswerWithMap{}, Choice{}, errors.New("Game is not start or has ended")
+		return AnswerWithMap{}, false, errors.New("Game is not start or has ended")
 	}
 	teamAnswer := gm.room.Answer(tid, uid, answer)
 	gm.room.UpdatePersonalStats(uid, answer)
-	return teamAnswer, gm.room.currentAnswer, nil
+	if teamAnswer.TeamAnswer.ChoiceID == 0 {
+		return teamAnswer, false, errors.New("team's answer cannot received.")
+	}
+	return teamAnswer, teamAnswer.TeamAnswer.ChoiceID == gm.room.currentAnswer.ChoiceID, nil
 }
 
 func (gm *GameManager) GetResultStats(uid uuid.UUID, tid TeamID) (total float32, ps Stats, ts Stats, err error) {

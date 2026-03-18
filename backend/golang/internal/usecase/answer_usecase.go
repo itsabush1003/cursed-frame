@@ -15,16 +15,16 @@ type AnswerUsecase struct {
 }
 
 func (au *AnswerUsecase) Execute(user *model.User, answer AnswerDTO) (core.Result, map[uint]int, error) {
-	teamAnswer, correctAnswer, err := au.gm.Answer(user.GetUserID(), core.TeamID(user.GetTeamID()), core.Choice{
-		ChoiceID: answer.ChoiceID,
+	teamAnswer, isCorrect, err := au.gm.Answer(user.GetUserID(), core.TeamID(user.GetTeamID()), core.Choice{
+		ChoiceID:   answer.ChoiceID,
 		ChoiceText: answer.ChoiceText,
 	})
 	if err != nil {
 		return core.Result{}, nil, err
 	}
 	return core.Result{
-		Answer: teamAnswer.TeamAnswer,
-		IsCorrect: teamAnswer.TeamAnswer == correctAnswer,
+		Answer:    teamAnswer.TeamAnswer,
+		IsCorrect: isCorrect,
 	}, teamAnswer.AnswerMap, nil
 }
 

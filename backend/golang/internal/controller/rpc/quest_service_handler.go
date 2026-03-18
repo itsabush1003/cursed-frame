@@ -75,7 +75,7 @@ func (qsh *QuestServiceHandler) Answer(ctx context.Context, r *connect.Request[q
 
 	answerCount := make([]int32, len(answerMap))
 	for cid, cnt := range answerMap {
-		answerCount[cid] = int32(cnt)
+		answerCount[cid-1] = int32(cnt)
 	}
 	return connect.NewResponse(&questv1.AnswerResponse{
 		IsCorrect: teamAnswer.IsCorrect,
