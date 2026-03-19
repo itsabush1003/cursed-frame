@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"maps"
 	"slices"
 	"time"
 
@@ -34,11 +35,21 @@ func (asqu *AdminStartQuestUsecase) Execute(
 		return failedCallback(err)
 	}
 	teams := asqu.gm.GetTeams()
-	teamIDs := make([]core.TeamID, 0, len(teams))
-	for tid := range teams {
-		teamIDs = append(teamIDs, tid)
-	}
+	teamIDs := slices.Collect(maps.Keys(teams))
 	shuffledTIDs := util.ShuffleSlice(teamIDs)
+checkConnectionLoop:
+	for {
+		select {
+		case <-networkCtx.Done():
+			return failedCallback(networkCtx.Err())
+		case <-time.After(time.Second):
+			connected := asqu.gm.GetConnectedMembers()
+			// 全チーム少なくとも一人以上の接続があるか
+			if slices.Min(slices.Collect(maps.Values(connected))) > 0 {
+				break checkConnectionLoop
+			}
+		}
+	}
 	for _, tid := range shuffledTIDs {
 		teamUsers := teams[tid]
 		shuffledUsers := util.ShuffleSlice(teamUsers)

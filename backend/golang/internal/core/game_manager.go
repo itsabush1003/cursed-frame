@@ -85,6 +85,13 @@ func (qr *questRoom) SetCurrent(target uuid.UUID, answer Choice) {
 	qr.currentAnswer = answer
 }
 
+func (qr *questRoom) GetConnectedUsers() []uuid.UUID {
+	qr.mu.RLock()
+	defer qr.mu.RUnlock()
+	connectedUsers := slices.Collect(maps.Keys(qr.conn))
+	return connectedUsers
+}
+
 func (qr *questRoom) PublishQuiz(quiz Quiz) {
 	qr.mu.RLock()
 	defer qr.mu.RUnlock()
@@ -340,6 +347,28 @@ func (gm *GameManager) QuestStart() (<-chan struct{}, error) {
 		}
 	}
 	return gm.room.nextQuizNotifier, nil
+}
+
+func (gm *GameManager) GetConnectedMembers() map[TeamID]uint {
+	if gm.state != INGAME {
+		return nil
+	}
+
+	gm.mu.Lock()
+	defer gm.mu.Unlock()
+	connectedUsers := gm.room.GetConnectedUsers()
+	teams := gm.GetTeams()
+	connectedMembers := make(map[TeamID]uint, len(teams))
+	for tid, users := range teams {
+		connectedMembers[tid] = 0
+		for _, uid := range users {
+			if slices.Contains(connectedUsers, uid) {
+				connectedMembers[tid]++
+			}
+		}
+	}
+
+	return connectedMembers
 }
 
 func (gm *GameManager) Broadcast(target uuid.UUID, quiz Quiz, correct Choice) error {
