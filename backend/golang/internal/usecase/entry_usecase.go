@@ -1,36 +1,41 @@
 package usecase
 
 import (
-	"github.com/google/uuid"
-
 	"github.com/itsuabush1003/cursed-frame/backend/golang/internal/model"
+	"github.com/itsuabush1003/cursed-frame/backend/golang/internal/util"
 )
 
-type UserDTO struct {
-	UserID      uuid.UUID
-	AccessToken string
+type EntryDTO struct {
+	AccessToken  string
+	ReconnectKey string
 }
 
 type EntryUsecase struct {
 	ur IUserRepository
+	secret []byte
 }
 
-func (ueu *EntryUsecase) Execute(name string) (UserDTO, error) {
+func (ueu *EntryUsecase) Execute(name string) (EntryDTO, error) {
 	user, err := model.NewUser(name)
 	if err != nil {
-		return UserDTO{}, err
+		return EntryDTO{}, err
+	}
+	key, err := util.Encrypt(user.GetUserID().String(), ueu.secret)
+	if err != nil {
+		return EntryDTO{}, nil
 	}
 	if err = ueu.ur.Save(user); err != nil {
-		return UserDTO{}, err
+		return EntryDTO{}, err
 	}
-	return UserDTO{
-		UserID:      user.GetUserID(),
+	return EntryDTO{
 		AccessToken: user.GetAccessToken(),
+		ReconnectKey: key,
 	}, nil
 }
 
-func NewEntryUsecase(ur IUserRepository) *EntryUsecase {
+func NewEntryUsecase(ur IUserRepository, secret []byte) *EntryUsecase {
 	return &EntryUsecase{
 		ur: ur,
+		secret: secret,
 	}
 }

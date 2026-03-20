@@ -15,20 +15,18 @@ type EntryServiceHandler struct {
 	entryv1connect.UnimplementedEntryServiceHandler
 	eu *usecase.EntryUsecase
 	ru *usecase.ReconnectUsecase
-	secret string
 }
 
 func (esh *EntryServiceHandler) Entry(
 	_ context.Context, req *connect.Request[entryv1.EntryRequest],
 ) (*connect.Response[entryv1.EntryResponse], error) {
-	userDto, err := esh.eu.Execute(req.Msg.UserName)
+	entryDto, err := esh.eu.Execute(req.Msg.UserName)
 	if err != nil {
 		return nil, err
 	}
 	res := connect.NewResponse(&entryv1.EntryResponse{
-		UserId:      userDto.UserID.String(),
-		AccessToken: userDto.AccessToken,
-		Secret:      esh.secret,
+		AccessToken:  entryDto.AccessToken,
+		ReconnectKey: entryDto.ReconnectKey,
 	})
 	return res, nil
 }
@@ -36,7 +34,7 @@ func (esh *EntryServiceHandler) Entry(
 func (esh *EntryServiceHandler) Reconnect(
 	_ context.Context, req *connect.Request[entryv1.ReconnectRequest],
 ) (*connect.Response[entryv1.ReconnectResponse], error) {
-	token, err := esh.ru.Execute(req.Msg.UserId, req.Msg.Secret)
+	token, err := esh.ru.Execute(req.Msg.ReconnectKey)
 	if err != nil {
 		return nil, err
 	}
@@ -46,10 +44,9 @@ func (esh *EntryServiceHandler) Reconnect(
 	return res, nil
 }
 
-func NewEntryServiceHandler(eu *usecase.EntryUsecase, ru *usecase.ReconnectUsecase, secret string) *EntryServiceHandler {
+func NewEntryServiceHandler(eu *usecase.EntryUsecase, ru *usecase.ReconnectUsecase) *EntryServiceHandler {
 	return &EntryServiceHandler{
 		eu: eu,
 		ru: ru,
-		secret: secret,
 	}
 }

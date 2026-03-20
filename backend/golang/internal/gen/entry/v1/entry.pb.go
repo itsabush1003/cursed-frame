@@ -68,9 +68,8 @@ func (x *EntryRequest) GetUserName() string {
 
 type EntryResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	AccessToken   string                 `protobuf:"bytes,2,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	Secret        string                 `protobuf:"bytes,3,opt,name=secret,proto3" json:"secret,omitempty"`
+	ReconnectKey  string                 `protobuf:"bytes,3,opt,name=reconnect_key,json=reconnectKey,proto3" json:"reconnect_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -105,13 +104,6 @@ func (*EntryResponse) Descriptor() ([]byte, []int) {
 	return file_entry_v1_entry_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *EntryResponse) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
 func (x *EntryResponse) GetAccessToken() string {
 	if x != nil {
 		return x.AccessToken
@@ -119,17 +111,16 @@ func (x *EntryResponse) GetAccessToken() string {
 	return ""
 }
 
-func (x *EntryResponse) GetSecret() string {
+func (x *EntryResponse) GetReconnectKey() string {
 	if x != nil {
-		return x.Secret
+		return x.ReconnectKey
 	}
 	return ""
 }
 
 type ReconnectRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Secret        string                 `protobuf:"bytes,2,opt,name=secret,proto3" json:"secret,omitempty"`
+	ReconnectKey  string                 `protobuf:"bytes,2,opt,name=reconnect_key,json=reconnectKey,proto3" json:"reconnect_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -164,16 +155,9 @@ func (*ReconnectRequest) Descriptor() ([]byte, []int) {
 	return file_entry_v1_entry_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *ReconnectRequest) GetUserId() string {
+func (x *ReconnectRequest) GetReconnectKey() string {
 	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *ReconnectRequest) GetSecret() string {
-	if x != nil {
-		return x.Secret
+		return x.ReconnectKey
 	}
 	return ""
 }
@@ -228,14 +212,12 @@ const file_entry_v1_entry_proto_rawDesc = "" +
 	"\n" +
 	"\x14entry/v1/entry.proto\x12\bentry.v1\x1a\x1bbuf/validate/validate.proto\"4\n" +
 	"\fEntryRequest\x12$\n" +
-	"\tuser_name\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\buserName\"\xc4\x01\n" +
-	"\rEntryResponse\x12x\n" +
-	"\auser_id\x18\x01 \x01(\tB_\xbaH\\rZ2X^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[4][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$R\x06userId\x12!\n" +
-	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12\x16\n" +
-	"\x06secret\x18\x03 \x01(\tR\x06secret\"\xa4\x01\n" +
-	"\x10ReconnectRequest\x12x\n" +
-	"\auser_id\x18\x01 \x01(\tB_\xbaH\\rZ2X^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[4][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$R\x06userId\x12\x16\n" +
-	"\x06secret\x18\x02 \x01(\tR\x06secret\"6\n" +
+	"\tuser_name\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\buserName\"W\n" +
+	"\rEntryResponse\x12!\n" +
+	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +
+	"\rreconnect_key\x18\x03 \x01(\tR\freconnectKey\"@\n" +
+	"\x10ReconnectRequest\x12,\n" +
+	"\rreconnect_key\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\x10R\freconnectKey\"6\n" +
 	"\x11ReconnectResponse\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken2\x8e\x01\n" +
 	"\fEntryService\x128\n" +
