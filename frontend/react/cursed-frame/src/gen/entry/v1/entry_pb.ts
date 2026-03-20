@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file entry/v1/entry.proto.
  */
 export const file_entry_v1_entry: GenFile = /*@__PURE__*/
-  fileDesc("ChRlbnRyeS92MS9lbnRyeS5wcm90bxIIZW50cnkudjEiKgoMRW50cnlSZXF1ZXN0EhoKCXVzZXJfbmFtZRgBIAEoCUIHukgEcgIQASKnAQoNRW50cnlSZXNwb25zZRJwCgd1c2VyX2lkGAEgASgJQl+6SFxyWjJYXlswLTlhLWZBLUZdezh9LVswLTlhLWZBLUZdezR9LVs0XVswLTlhLWZBLUZdezN9LVs4OWFiQUJdWzAtOWEtZkEtRl17M30tWzAtOWEtZkEtRl17MTJ9JBIUCgxhY2Nlc3NfdG9rZW4YAiABKAkSDgoGc2VjcmV0GAMgASgJIpQBChBSZWNvbm5lY3RSZXF1ZXN0EnAKB3VzZXJfaWQYASABKAlCX7pIXHJaMlheWzAtOWEtZkEtRl17OH0tWzAtOWEtZkEtRl17NH0tWzRdWzAtOWEtZkEtRl17M30tWzg5YWJBQl1bMC05YS1mQS1GXXszfS1bMC05YS1mQS1GXXsxMn0kEg4KBnNlY3JldBgCIAEoCSIpChFSZWNvbm5lY3RSZXNwb25zZRIUCgxhY2Nlc3NfdG9rZW4YASABKAkyjgEKDEVudHJ5U2VydmljZRI4CgVFbnRyeRIWLmVudHJ5LnYxLkVudHJ5UmVxdWVzdBoXLmVudHJ5LnYxLkVudHJ5UmVzcG9uc2USRAoJUmVjb25uZWN0EhouZW50cnkudjEuUmVjb25uZWN0UmVxdWVzdBobLmVudHJ5LnYxLlJlY29ubmVjdFJlc3BvbnNlQlRaUmdpdGh1Yi5jb20vaXRzdWFidXNoMTAwMy9jdXJzZWQtZnJhbWUvYmFja2VuZC9nb2xhbmcvaW50ZXJuYWwvZ2VuL2VudHJ5L3YxO2VudHJ5djFiBnByb3RvMw", [file_buf_validate_validate]);
+  fileDesc("ChRlbnRyeS92MS9lbnRyeS5wcm90bxIIZW50cnkudjEiKgoMRW50cnlSZXF1ZXN0EhoKCXVzZXJfbmFtZRgBIAEoCUIHukgEcgIQASI8Cg1FbnRyeVJlc3BvbnNlEhQKDGFjY2Vzc190b2tlbhgCIAEoCRIVCg1yZWNvbm5lY3Rfa2V5GAMgASgJIjIKEFJlY29ubmVjdFJlcXVlc3QSHgoNcmVjb25uZWN0X2tleRgCIAEoCUIHukgEcgIQECIpChFSZWNvbm5lY3RSZXNwb25zZRIUCgxhY2Nlc3NfdG9rZW4YASABKAkyjgEKDEVudHJ5U2VydmljZRI4CgVFbnRyeRIWLmVudHJ5LnYxLkVudHJ5UmVxdWVzdBoXLmVudHJ5LnYxLkVudHJ5UmVzcG9uc2USRAoJUmVjb25uZWN0EhouZW50cnkudjEuUmVjb25uZWN0UmVxdWVzdBobLmVudHJ5LnYxLlJlY29ubmVjdFJlc3BvbnNlQlRaUmdpdGh1Yi5jb20vaXRzdWFidXNoMTAwMy9jdXJzZWQtZnJhbWUvYmFja2VuZC9nb2xhbmcvaW50ZXJuYWwvZ2VuL2VudHJ5L3YxO2VudHJ5djFiBnByb3RvMw", [file_buf_validate_validate]);
 
 /**
  * @generated from message entry.v1.EntryRequest
@@ -36,19 +36,14 @@ export const EntryRequestSchema: GenMessage<EntryRequest> = /*@__PURE__*/
  */
 export type EntryResponse = Message<"entry.v1.EntryResponse"> & {
   /**
-   * @generated from field: string user_id = 1;
-   */
-  userId: string;
-
-  /**
    * @generated from field: string access_token = 2;
    */
   accessToken: string;
 
   /**
-   * @generated from field: string secret = 3;
+   * @generated from field: string reconnect_key = 3;
    */
-  secret: string;
+  reconnectKey: string;
 };
 
 /**
@@ -63,14 +58,9 @@ export const EntryResponseSchema: GenMessage<EntryResponse> = /*@__PURE__*/
  */
 export type ReconnectRequest = Message<"entry.v1.ReconnectRequest"> & {
   /**
-   * @generated from field: string user_id = 1;
+   * @generated from field: string reconnect_key = 2;
    */
-  userId: string;
-
-  /**
-   * @generated from field: string secret = 2;
-   */
-  secret: string;
+  reconnectKey: string;
 };
 
 /**

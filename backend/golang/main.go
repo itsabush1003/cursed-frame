@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"io/fs"
@@ -22,7 +23,7 @@ import (
 	"github.com/itsuabush1003/cursed-frame/backend/golang/internal/util"
 )
 
-const SecretLength int = 8
+const SecretLength int = 16
 const TempDirName string = "user_images"
 
 var userNum int
@@ -43,6 +44,10 @@ func main() {
 	flag.Parse()
 
 	secret, err := util.CreateRandStr(SecretLength)
+	if err != nil {
+		panic(err)
+	}
+	byteSecret, err := base64.RawURLEncoding.DecodeString(secret)
 	if err != nil {
 		panic(err)
 	}
@@ -89,9 +94,9 @@ func main() {
 	imageUploadUsecase := usecase.NewImageUploadUsecase(imageDirname, userImageRepository)
 	imageDownloadUsecase := usecase.NewImageDownloadUsecase(userImageRepository)
 	imageHandler := restcontroller.NewImageHandler(imageUploadUsecase, imageDownloadUsecase, imageDirname)
-	entryUsecase := usecase.NewEntryUsecase(userRepository)
-	reconnectUsecase := usecase.NewReconnectUsecase(secret, userRepository)
-	entryServiceHandler := rpccontroller.NewEntryServiceHandler(entryUsecase, reconnectUsecase, secret)
+	entryUsecase := usecase.NewEntryUsecase(userRepository, byteSecret)
+	reconnectUsecase := usecase.NewReconnectUsecase(byteSecret, userRepository)
+	entryServiceHandler := rpccontroller.NewEntryServiceHandler(entryUsecase, reconnectUsecase)
 	profileQuestionRepository := repository.NewProfileQuestionRepository(database)
 	userProfileRepository := repository.NewUserProfileRepository(database)
 	joinLobbyUsecase := usecase.NewJoinLobbyUsecase(gameManager)
