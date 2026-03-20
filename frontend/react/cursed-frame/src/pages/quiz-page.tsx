@@ -72,8 +72,8 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
             ? (map.has(answer.answer.choiceId)
                 ? map
                     .get(answer.answer.choiceId)
-                    ?.push(answer.teamId.toString())
-                : map.set(answer.answer.choiceId, [answer.teamId.toString()]),
+                    ?.push(answer.teamColor)
+                : map.set(answer.answer.choiceId, [answer.teamColor]),
               map)
             : map,
         new Map<number, string[]>(),
