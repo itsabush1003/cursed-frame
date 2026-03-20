@@ -37,7 +37,7 @@ const ResultPage = () => {
           .sort((a, b) => a.teamOrder - b.teamOrder)
           .map((ts) => {
             return {
-              teamName: ts.teamId.toString(),
+              teamColor: ts.teamColor,
               teamOrder: ts.teamOrder,
               correctRate: ts.teamCorrectRate,
               memberStats: ts.membersStats.map((ps) => ({
@@ -54,7 +54,7 @@ const ResultPage = () => {
       setResult(response.result);
       setStats([
         {
-          teamName: userStatus.color,
+          teamColor: userStatus.color,
           teamOrder: response.teamOrder,
           correctRate: 0,
           memberStats: [

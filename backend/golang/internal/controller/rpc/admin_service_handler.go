@@ -112,7 +112,8 @@ func (ash *AdminServiceHandler) CheckAnswers(ctx context.Context, r *connect.Req
 	answers := make([]*adminv1.TeamAnswer, 0, len(results))
 	for tid, res := range results {
 		answers = append(answers, &adminv1.TeamAnswer{
-			TeamId: uint32(tid),
+			TeamId:    uint32(tid),
+			TeamColor: model.TeamColor(uint32(tid)).String(),
 			Answer: &commonv1.Choice{
 				ChoiceId:   uint32(res.Answer.ChoiceID),
 				ChoiceText: res.Answer.ChoiceText,
@@ -150,6 +151,7 @@ func (ash *AdminServiceHandler) EndQuest(ctx context.Context, r *connect.Request
 		}
 		wholeStats = append(wholeStats, &adminv1.TeamStats{
 			TeamId:          uint32(tid),
+			TeamColor:       model.TeamColor(uint32(tid)).String(),
 			MembersStats:    membersStats,
 			TeamCorrectRate: stats.CorrectRate,
 			TeamOrder:       stats.TeamOrder,
