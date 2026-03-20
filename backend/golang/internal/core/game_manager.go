@@ -35,7 +35,6 @@ func (l *lobby) Disconnect(user uuid.UUID) {
 type TeamID uint32
 
 type Choice struct {
-	Target     uuid.UUID
 	ChoiceID   uint
 	ChoiceText string
 }

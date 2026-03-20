@@ -105,12 +105,11 @@ checkConnectionLoop:
 			var correctChoiceID uint
 			for i, choice := range choiceCandidates {
 				quiz.Choices[i] = core.Choice{
-					Target:     uid,
-					ChoiceID:   uint(i),
+					ChoiceID:   uint(i + 1),
 					ChoiceText: choice,
 				}
 				if choice == correctProfile[0].GetAnswer() {
-					correctChoiceID = uint(i)
+					correctChoiceID = uint(i + 1)
 				}
 			}
 			var remaindTime int = core.InitialRemaindTime
@@ -132,7 +131,6 @@ checkConnectionLoop:
 				case <-ticker.C:
 					quiz.RemainedTime = remaindTime
 					asqu.gm.Broadcast(uid, quiz, core.Choice{
-						Target:     uid,
 						ChoiceID:   correctChoiceID,
 						ChoiceText: correctProfile[0].GetAnswer(),
 					})
