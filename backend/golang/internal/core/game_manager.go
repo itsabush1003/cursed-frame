@@ -445,6 +445,7 @@ func (gm *GameManager) EndQuest() error {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
 	gm.state = RESULT
+	gm.room.doneNotifier()
 	return nil
 }
 
