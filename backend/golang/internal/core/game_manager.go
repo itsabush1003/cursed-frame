@@ -117,7 +117,7 @@ func (qr *questRoom) CollectAnswer() (map[TeamID]Choice, map[TeamID]map[uint]int
 	qr.mu.RLock()
 	defer qr.mu.RUnlock()
 	reporters := make(map[TeamID]chan Choice, len(qr.teams))
-	for tid, _ := range qr.teams {
+	for tid := range qr.teams {
 		reporters[tid] = make(chan Choice, len(qr.teams[tid]))
 		wg.Go(func() {
 			timer := time.NewTimer(5 * time.Second)
@@ -203,9 +203,6 @@ func (qr *questRoom) UpdateTeamStats(teamAnswers map[TeamID]Choice) {
 func (qr *questRoom) Connect(uid uuid.UUID) (context.Context, <-chan Quiz) {
 	qr.mu.Lock()
 	defer qr.mu.Unlock()
-	if qr.conn[uid] != nil {
-		close(qr.conn[uid])
-	}
 	ch := make(chan Quiz, 1)
 	qr.conn[uid] = ch
 	return qr.ctx, ch
@@ -309,7 +306,7 @@ func (gm *GameManager) SplitTeams(users []uuid.UUID, teamNum int) map[uuid.UUID]
 	userTeam := make(map[uuid.UUID]uint32, userNum)
 	maxTeamMember := int(math.Ceil(float64(userNum) / float64(teamNum)))
 	for i := range teamNum {
-		gm.room.teams[TeamID(i)] = make([]uuid.UUID, 0, maxTeamMember)
+		gm.room.teams[TeamID(i+1)] = make([]uuid.UUID, 0, maxTeamMember)
 	}
 	shuffled := util.ShuffleSlice(users)
 	for i, u := range shuffled {
@@ -407,8 +404,9 @@ func (gm *GameManager) DistributeAnswer(results map[TeamID]Result, answerMaps ma
 		return errors.New("Server is not in game mode")
 	}
 
+	teams := gm.GetTeams()
 	for tid, result := range results {
-		users := gm.room.teams[tid]
+		users := teams[tid]
 		for _, user := range users {
 			go func(ch chan<- AnswerWithMap, c Choice, am map[uint]int) {
 				select {
