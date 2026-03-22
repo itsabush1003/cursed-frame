@@ -1,6 +1,7 @@
 import { useCallback, useContext, useMemo, useState } from "react";
 
 import RegistProfileForm from "@/components/regist-profile-form";
+import TeamInfoPanel from "@/components/team-info-panel";
 import { UserStatusContext } from "@/context/user-status-context";
 import useStreamObserver from "@/hooks/use-stream-observer";
 import getGuestClient from "@/services/rpc/guest-client";
@@ -18,6 +19,7 @@ const ProfilePage = ({ toNext }: { toNext: () => void }) => {
     useState<ProfileQuestion>(firstQuestion);
   const [isQuestionComplete, setIsQuestionComplete] = useState<boolean>(false);
   const [isTeamInfoShow, setIsTeamInfoShow] = useState<boolean>(false);
+  const [members, setMembers] = useState<string[]>([]);
   const { userStatus, setUserStatus } = useContext(UserStatusContext);
   const guestClient = useMemo<ReturnType<typeof getGuestClient>>(
     () => getGuestClient(() => userStatus.token),
@@ -44,8 +46,9 @@ const ProfilePage = ({ toNext }: { toNext: () => void }) => {
     }
   };
   const getTeamInfo = async () => {
-    const teamInfo = await guestClient.getTeamId();
+    const { members, ...teamInfo } = await guestClient.getTeamInfo();
     setUserStatus(teamInfo);
+    setMembers(members);
     setIsTeamInfoShow(true);
   };
 
@@ -76,7 +79,16 @@ const ProfilePage = ({ toNext }: { toNext: () => void }) => {
         ) : (
           <div>{currentQuestion.question}</div>
         ))}
-      {isTeamInfoShow && <button onClick={toNext}>ゲーム開始</button>}
+      {isTeamInfoShow && (
+        <>
+          <TeamInfoPanel
+            teamId={userStatus.teamId}
+            teamColor={userStatus.color}
+            members={members}
+          />
+          <button onClick={toNext}>ゲーム開始</button>
+        </>
+      )}
     </div>
   );
 };

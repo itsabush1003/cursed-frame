@@ -21,14 +21,15 @@ message RegistProfileResponse {
   bool no_more_answer = 3;
 }
 
-message GetTeamIDResponse {
+message GetTeamInfoResponse {
   uint32 team_id = 1;
-  string team_name = 2;
+  string team_color = 2;
+  repeated string members = 3;
 }
 
 service LobbyService {
   rpc JoinLobby(google.protobuf.Empty) returns (stream LobbyStatus);
   rpc RegistProfile(RegistProfileRequest) returns (RegistProfileResponse);
   rpc IsReady(google.protobuf.Empty) returns (google.protobuf.Empty);
-  rpc GetTeamID(google.protobuf.Empty) returns (GetTeamIDResponse);
+  rpc GetTeamInfo(google.protobuf.Empty) returns (GetTeamInfoResponse);
 }

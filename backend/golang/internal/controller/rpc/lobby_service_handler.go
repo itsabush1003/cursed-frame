@@ -19,7 +19,7 @@ type LobbyServiceHandler struct {
 	jlu *usecase.JoinLobbyUsecase
 	rpu *usecase.RegistProfileUsecase
 	sru *usecase.SetReadyUsecase
-	gtu *usecase.GetTeamIDUsecase
+	gtu *usecase.GetTeamInfoUsecase
 }
 
 func (lsh *LobbyServiceHandler) JoinLobby(ctx context.Context, r *connect.Request[emptypb.Empty], stream *connect.ServerStream[lobbyv1.LobbyStatus]) error {
@@ -80,20 +80,20 @@ func (lsh *LobbyServiceHandler) IsReady(ctx context.Context, r *connect.Request[
 	return res, nil
 }
 
-func (lsh *LobbyServiceHandler) GetTeamID(ctx context.Context, r *connect.Request[emptypb.Empty]) (*connect.Response[lobbyv1.GetTeamIDResponse], error) {
+func (lsh *LobbyServiceHandler) GetTeamInfo(ctx context.Context, r *connect.Request[emptypb.Empty]) (*connect.Response[lobbyv1.GetTeamInfoResponse], error) {
 	user := middleware.GetUserFromCtx(ctx)
 	if user == nil {
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("Unauthenticated Access"))
 	}
-	tid, name, err := lsh.gtu.Execute(user)
+	tid, teamColor, members, err := lsh.gtu.Execute(user)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 
-	return connect.NewResponse(&lobbyv1.GetTeamIDResponse{TeamId: tid, TeamName: name}), nil
+	return connect.NewResponse(&lobbyv1.GetTeamInfoResponse{TeamId: tid, TeamColor: teamColor, Members: members}), nil
 }
 
-func NewLobbyServiceHandler(jlu *usecase.JoinLobbyUsecase, rpu *usecase.RegistProfileUsecase, sru *usecase.SetReadyUsecase, gtu *usecase.GetTeamIDUsecase) *LobbyServiceHandler {
+func NewLobbyServiceHandler(jlu *usecase.JoinLobbyUsecase, rpu *usecase.RegistProfileUsecase, sru *usecase.SetReadyUsecase, gtu *usecase.GetTeamInfoUsecase) *LobbyServiceHandler {
 	return &LobbyServiceHandler{
 		jlu: jlu,
 		rpu: rpu,

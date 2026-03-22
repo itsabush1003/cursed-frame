@@ -46,11 +46,12 @@ const getGuestClient = (getToken: () => string) => {
     isReady: async () => {
       lobbyClient.isReady({});
     },
-    getTeamId: async () => {
-      const getTeamIDResponse = await lobbyClient.getTeamID({});
+    getTeamInfo: async () => {
+      const getTeamInfoResponse = await lobbyClient.getTeamInfo({});
       return {
-        teamId: getTeamIDResponse.teamId,
-        color: getTeamIDResponse.teamName,
+        teamId: getTeamInfoResponse.teamId,
+        color: getTeamInfoResponse.teamColor,
+        members: getTeamInfoResponse.members,
       };
     },
     startQuest: questClient.startQuest,

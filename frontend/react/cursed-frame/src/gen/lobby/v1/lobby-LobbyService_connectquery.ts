@@ -5,7 +5,7 @@
 
 import { createQueryService } from "@bufbuild/connect-query";
 import { Empty, MethodKind } from "@bufbuild/protobuf";
-import { GetTeamIDResponse, RegistProfileRequest, RegistProfileResponse } from "./lobby_pb.js";
+import { GetTeamInfoResponse, RegistProfileRequest, RegistProfileResponse } from "./lobby_pb.js";
 
 export const typeName = "lobby.v1.LobbyService";
 
@@ -44,18 +44,18 @@ export const isReady = createQueryService({
 }).isReady;
 
 /**
- * @generated from rpc lobby.v1.LobbyService.GetTeamID
+ * @generated from rpc lobby.v1.LobbyService.GetTeamInfo
  */
-export const getTeamID = createQueryService({
+export const getTeamInfo = createQueryService({
   service: {
     methods: {
-      getTeamID: {
-        name: "GetTeamID",
+      getTeamInfo: {
+        name: "GetTeamInfo",
         kind: MethodKind.Unary,
         I: Empty,
-        O: GetTeamIDResponse,
+        O: GetTeamInfoResponse,
       },
     },
     typeName: "lobby.v1.LobbyService",
   },
-}).getTeamID;
+}).getTeamInfo;
