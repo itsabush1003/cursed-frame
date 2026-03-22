@@ -41,8 +41,9 @@ const (
 	LobbyServiceRegistProfileProcedure = "/lobby.v1.LobbyService/RegistProfile"
 	// LobbyServiceIsReadyProcedure is the fully-qualified name of the LobbyService's IsReady RPC.
 	LobbyServiceIsReadyProcedure = "/lobby.v1.LobbyService/IsReady"
-	// LobbyServiceGetTeamIDProcedure is the fully-qualified name of the LobbyService's GetTeamID RPC.
-	LobbyServiceGetTeamIDProcedure = "/lobby.v1.LobbyService/GetTeamID"
+	// LobbyServiceGetTeamInfoProcedure is the fully-qualified name of the LobbyService's GetTeamInfo
+	// RPC.
+	LobbyServiceGetTeamInfoProcedure = "/lobby.v1.LobbyService/GetTeamInfo"
 )
 
 // LobbyServiceClient is a client for the lobby.v1.LobbyService service.
@@ -50,7 +51,7 @@ type LobbyServiceClient interface {
 	JoinLobby(context.Context, *connect.Request[emptypb.Empty]) (*connect.ServerStreamForClient[v1.LobbyStatus], error)
 	RegistProfile(context.Context, *connect.Request[v1.RegistProfileRequest]) (*connect.Response[v1.RegistProfileResponse], error)
 	IsReady(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[emptypb.Empty], error)
-	GetTeamID(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetTeamIDResponse], error)
+	GetTeamInfo(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetTeamInfoResponse], error)
 }
 
 // NewLobbyServiceClient constructs a client for the lobby.v1.LobbyService service. By default, it
@@ -82,10 +83,10 @@ func NewLobbyServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(lobbyServiceMethods.ByName("IsReady")),
 			connect.WithClientOptions(opts...),
 		),
-		getTeamID: connect.NewClient[emptypb.Empty, v1.GetTeamIDResponse](
+		getTeamInfo: connect.NewClient[emptypb.Empty, v1.GetTeamInfoResponse](
 			httpClient,
-			baseURL+LobbyServiceGetTeamIDProcedure,
-			connect.WithSchema(lobbyServiceMethods.ByName("GetTeamID")),
+			baseURL+LobbyServiceGetTeamInfoProcedure,
+			connect.WithSchema(lobbyServiceMethods.ByName("GetTeamInfo")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -96,7 +97,7 @@ type lobbyServiceClient struct {
 	joinLobby     *connect.Client[emptypb.Empty, v1.LobbyStatus]
 	registProfile *connect.Client[v1.RegistProfileRequest, v1.RegistProfileResponse]
 	isReady       *connect.Client[emptypb.Empty, emptypb.Empty]
-	getTeamID     *connect.Client[emptypb.Empty, v1.GetTeamIDResponse]
+	getTeamInfo   *connect.Client[emptypb.Empty, v1.GetTeamInfoResponse]
 }
 
 // JoinLobby calls lobby.v1.LobbyService.JoinLobby.
@@ -114,9 +115,9 @@ func (c *lobbyServiceClient) IsReady(ctx context.Context, req *connect.Request[e
 	return c.isReady.CallUnary(ctx, req)
 }
 
-// GetTeamID calls lobby.v1.LobbyService.GetTeamID.
-func (c *lobbyServiceClient) GetTeamID(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetTeamIDResponse], error) {
-	return c.getTeamID.CallUnary(ctx, req)
+// GetTeamInfo calls lobby.v1.LobbyService.GetTeamInfo.
+func (c *lobbyServiceClient) GetTeamInfo(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetTeamInfoResponse], error) {
+	return c.getTeamInfo.CallUnary(ctx, req)
 }
 
 // LobbyServiceHandler is an implementation of the lobby.v1.LobbyService service.
@@ -124,7 +125,7 @@ type LobbyServiceHandler interface {
 	JoinLobby(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[v1.LobbyStatus]) error
 	RegistProfile(context.Context, *connect.Request[v1.RegistProfileRequest]) (*connect.Response[v1.RegistProfileResponse], error)
 	IsReady(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[emptypb.Empty], error)
-	GetTeamID(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetTeamIDResponse], error)
+	GetTeamInfo(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetTeamInfoResponse], error)
 }
 
 // NewLobbyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -152,10 +153,10 @@ func NewLobbyServiceHandler(svc LobbyServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(lobbyServiceMethods.ByName("IsReady")),
 		connect.WithHandlerOptions(opts...),
 	)
-	lobbyServiceGetTeamIDHandler := connect.NewUnaryHandler(
-		LobbyServiceGetTeamIDProcedure,
-		svc.GetTeamID,
-		connect.WithSchema(lobbyServiceMethods.ByName("GetTeamID")),
+	lobbyServiceGetTeamInfoHandler := connect.NewUnaryHandler(
+		LobbyServiceGetTeamInfoProcedure,
+		svc.GetTeamInfo,
+		connect.WithSchema(lobbyServiceMethods.ByName("GetTeamInfo")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/lobby.v1.LobbyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -166,8 +167,8 @@ func NewLobbyServiceHandler(svc LobbyServiceHandler, opts ...connect.HandlerOpti
 			lobbyServiceRegistProfileHandler.ServeHTTP(w, r)
 		case LobbyServiceIsReadyProcedure:
 			lobbyServiceIsReadyHandler.ServeHTTP(w, r)
-		case LobbyServiceGetTeamIDProcedure:
-			lobbyServiceGetTeamIDHandler.ServeHTTP(w, r)
+		case LobbyServiceGetTeamInfoProcedure:
+			lobbyServiceGetTeamInfoHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -189,6 +190,6 @@ func (UnimplementedLobbyServiceHandler) IsReady(context.Context, *connect.Reques
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("lobby.v1.LobbyService.IsReady is not implemented"))
 }
 
-func (UnimplementedLobbyServiceHandler) GetTeamID(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetTeamIDResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("lobby.v1.LobbyService.GetTeamID is not implemented"))
+func (UnimplementedLobbyServiceHandler) GetTeamInfo(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetTeamInfoResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("lobby.v1.LobbyService.GetTeamInfo is not implemented"))
 }
