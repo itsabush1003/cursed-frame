@@ -16,11 +16,9 @@ export const getImageService = (getToken: () => string) => {
       const blob = await response.blob();
       return URL.createObjectURL(blob);
     },
-    upload: async (imageSource: string) => {
+    upload: async (imageBlob: Blob) => {
       const formData = new FormData();
-      const imageData = await fetch(imageSource);
-      const imageBlob = await imageData.blob();
-      formData.append("image", imageBlob, "picture.jpg");
+      formData.append("image", imageBlob, "profile-image.jpg");
 
       const token = getToken();
       const response = await fetch(baseUrl, {

@@ -1,7 +1,12 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { css } from "@emotion/react";
 import { useForm, type SubmitHandler } from "react-hook-form";
+
+import CropCanvas, { type CropRef } from "./crop-canvas";
+
+type emptyObject = { [key: string]: never };
+type getBlobFn = { func: ((blobType: string) => Promise<Blob | null>) | null };
 
 export interface UserInfo {
   name: string;
@@ -13,32 +18,61 @@ const EntryForm = ({
   imageUpload,
 }: {
   entry: (name: string) => Promise<void>;
-  imageUpload: (imageSource: string) => Promise<void>;
+  imageUpload: (imageSource: Blob) => Promise<void>;
 }) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<UserInfo>();
-  const onSubmit: SubmitHandler<UserInfo> = async (data) => {
-    await entry(data.name);
-    await imageUpload(imageSource);
-  };
-  const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const cropRef = useRef<CropRef>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [imageSource, setImageSource] = useState<string>("");
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length <= 0) {
-      setImageSource("");
-      return;
+  // react compilerのバグで、handleSubmitに渡す関数の中でrefの参照ができないので、workaroundとして関数をstate化
+  const [getCroppedImage, setGetCroppedImage] = useState<getBlobFn>({
+    func: null,
+  });
+  // 上記関数の都度更新のためのトリガー
+  const [emptyTrigger, setEmptyTrigger] = useState<emptyObject>({});
+  const trigger = useCallback(() => setEmptyTrigger({}), []);
+
+  const onSubmit: SubmitHandler<UserInfo> = async (data) => {
+    if (getCroppedImage.func !== null) {
+      const blob = await getCroppedImage.func("image/jpeg");
+      if (blob === null) return;
+      await entry(data.name);
+      await imageUpload(blob);
     }
-    const file = e.target.files[0];
-    const fileReader = new FileReader();
-    fileReader.onload = () => {
-      setImageSource(fileReader.result as string);
-    };
-    fileReader.readAsDataURL(file);
   };
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files || e.target.files.length <= 0) {
+        setImageSource("");
+        return;
+      }
+      const file = e.target.files[0];
+      setImageSource((prev) => {
+        const newURL = URL.createObjectURL(file);
+        if (prev === newURL) return prev;
+        if (prev !== "") URL.revokeObjectURL(prev);
+        cropRef.current?.clearCroppedArea();
+        return newURL;
+      });
+    },
+    [],
+  );
   const { ref, ...imageInputProps } = register("image", { required: true });
+
+  useEffect(() => {
+    // 無駄な再レンダリングを避けるため、常にprevを返す
+    setGetCroppedImage((prev) => {
+      if (cropRef.current?.getCroppedImage === undefined) return prev;
+      else {
+        prev.func = cropRef.current.getCroppedImage;
+        return prev;
+      }
+    });
+  }, [emptyTrigger]);
 
   return (
     <div css={containerStyle}>
@@ -58,17 +92,16 @@ const EntryForm = ({
           }}
         >
           {imageSource ? (
-            <img
-              src={imageSource}
-              width={"100%"}
-              height={"100%"}
-              style={{ maxWidth: "100%", height: "auto", objectFit: "cover" }}
+            <CropCanvas
+              ref={cropRef}
+              uploadedImage={imageSource}
+              cropEventTrigger={trigger}
             />
           ) : (
             <>
               プレビュー
               <br />
-              クリックで画像選択
+              クリック／タップで画像選択
             </>
           )}
         </div>
@@ -90,6 +123,7 @@ const EntryForm = ({
           type="file"
           accept="image/*"
           onChange={handleFileChange}
+          style={{ display: "none" }}
         />
         {errors.image && (
           <>
@@ -126,6 +160,17 @@ const containerStyle = css`
   justify-content: center;
   align-items: center;
   background-color: var(--sub-color-1-1-light);
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  scrollbar-width: 0.5em;
+  scrollbar-color: var(--sub-color-1-1-dark);
+  ::-webkit-scrollbar {
+    width: 0.5em;
+    display: block;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--sub-color-1-1-dark);
+  }
 `;
 
 const noticeStyle = css`
