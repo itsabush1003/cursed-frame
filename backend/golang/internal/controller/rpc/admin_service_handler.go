@@ -15,14 +15,15 @@ import (
 
 type AdminServiceHandler struct {
 	adminv1connect.UnimplementedAdminServiceHandler
-	oeu  *usecase.OpenEntryUsecase
-	ceu  *usecase.CloseEntryUsecase
-	ruu  *usecase.RejectUserUsecase
-	ctu  *usecase.ChangeTeamUsecase
-	asqu *usecase.AdminStartQuestUsecase
-	cau  *usecase.CheckAnswersUsecase
-	nqu  *usecase.NextQuizUsecase
-	equ  *usecase.EndQuestUsecase
+	oeu     *usecase.OpenEntryUsecase
+	ceu     *usecase.CloseEntryUsecase
+	ruu     *usecase.RejectUserUsecase
+	ctu     *usecase.ChangeTeamUsecase
+	asqu    *usecase.AdminStartQuestUsecase
+	cau     *usecase.CheckAnswersUsecase
+	nqu     *usecase.NextQuizUsecase
+	equ     *usecase.EndQuestUsecase
+	userNum int32
 }
 
 func (ash *AdminServiceHandler) OpenEntry(ctx context.Context, r *connect.Request[emptypb.Empty], stream *connect.ServerStream[adminv1.OpenEntryResponse]) error {
@@ -38,7 +39,10 @@ func (ash *AdminServiceHandler) OpenEntry(ctx context.Context, r *connect.Reques
 					IsReady:  u.GetIsReady(),
 				})
 			}
-			return stream.Send(&adminv1.OpenEntryResponse{EnteredUsers: enteredUsers})
+			return stream.Send(&adminv1.OpenEntryResponse{
+				EnteredUsers:    enteredUsers,
+				ExpectedUserNum: ash.userNum,
+			})
 		},
 		func() { /*** DO NOTHING ***/ },
 		func(err error) error {
@@ -173,15 +177,17 @@ func NewAdminServiceHandler(
 	cau *usecase.CheckAnswersUsecase,
 	nqu *usecase.NextQuizUsecase,
 	equ *usecase.EndQuestUsecase,
+	userNum int,
 ) *AdminServiceHandler {
 	return &AdminServiceHandler{
-		oeu:  oeu,
-		ceu:  ceu,
-		ruu:  ruu,
-		ctu:  ctu,
-		asqu: asqu,
-		cau:  cau,
-		nqu:  nqu,
-		equ:  equ,
+		oeu:     oeu,
+		ceu:     ceu,
+		ruu:     ruu,
+		ctu:     ctu,
+		asqu:    asqu,
+		cau:     cau,
+		nqu:     nqu,
+		equ:     equ,
+		userNum: int32(userNum),
 	}
 }
