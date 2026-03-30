@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"embed"
 	"encoding/base64"
 	"flag"
@@ -25,9 +26,16 @@ import (
 
 const SecretLength int = 16
 const TempDirName string = "user_images"
+const EnvPrefix string = "PCF_"
 
-var userNum int
-var teamNum int
+var (
+	userNum     int
+	teamNum     int
+	certFile    string
+	keyFile     string
+	domain      string
+	useAutoCert bool
+)
 
 //go:embed dist/*
 var staticFiles embed.FS
@@ -38,6 +46,10 @@ var dbSourceFiles embed.FS
 func init() {
 	flag.IntVar(&userNum, "N", 6, "総参加者数")
 	flag.IntVar(&teamNum, "T", 2, "参加者を振り分けるチーム数")
+	flag.StringVar(&certFile, "cert", os.Getenv(EnvPrefix+"SSL_CERT_FILE"), "TLS用証明書ファイル")
+	flag.StringVar(&keyFile, "key", os.Getenv(EnvPrefix+"SSL_KEY_FILE"), "TLS用鍵ファイル")
+	flag.StringVar(&domain, "domain", os.Getenv(EnvPrefix+"DOMAIN"), "ドメイン")
+	flag.BoolVar(&useAutoCert, "autocert", false, "証明書の自動生成を有効にするか")
 }
 
 func main() {
@@ -65,6 +77,24 @@ func main() {
 	}
 	defer os.RemoveAll(dbDirname)
 	println(dbDirname)
+
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}
+	if certFile != "" && keyFile != "" {
+		certs, err := infra.CreateCertificateFromFiles(certFile, keyFile)
+		if err != nil {
+			panic(err)
+		}
+		tlsConfig.Certificates = certs
+	} else if useAutoCert {
+		getCertificate, cleanAutoCert, err := infra.CreateCertificateWithAutoCert(domain)
+		if err != nil {
+			panic(err)
+		}
+		defer cleanAutoCert()
+		tlsConfig.GetCertificate = getCertificate
+	}
 
 	// "dist"ディレクトリをルートとして扱う
 	dist, err := fs.Sub(staticFiles, "dist")
@@ -120,7 +150,7 @@ func main() {
 	adminServiceHandler := rpccontroller.NewAdminServiceHandler(openEntryUsecase, closeEntryUsecase, rejectUserUsecase, changeTeamUsecase, adminStartQuestUsecase, checkAnswersUsecase, nextQuizUsecase, endQuestUsecase, userNum)
 	router := infra.NewRouter(fileHandler, imageHandler, entryServiceHandler, lobbyServiceHandler, questServiceHandler, adminServiceHandler, authorizeMiddleware, rateLimitMiddleware, corsMiddleware)
 
-	server := infra.NewServer(":8888", router)
+	server := infra.NewServer(":8888", tlsConfig, router)
 	println(fmt.Sprintf("Server started at :8888%s\n\tguest: %s", router.AdminPath, router.GuestPath))
 	if err = server.ListenAndServe(); err != nil {
 		panic(err)
