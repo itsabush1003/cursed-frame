@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
-import { css } from "@emotion/react";
+import { css, keyframes } from "@emotion/react";
 import { CSSTransition } from "react-transition-group";
 
 import { type ChoiceRef, Choices, type Choice } from "@/components/choices";
@@ -58,6 +58,7 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
   const [answerMap, setAnswerMap] = useState<Map<number, string[]> | undefined>(
     undefined,
   );
+  const [results, setResults] = useState<boolean[]>([]);
   const { userStatus } = useContext(UserStatusContext);
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const choiceRef = useRef<ChoiceRef | null>(null);
@@ -79,6 +80,7 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
         new Map<number, string[]>(),
       );
       setAnswerMap(answers);
+      setResults(response.answers.map((answer) => answer.isCorrect));
     } else if ("answer" in client) {
       // guestの場合
       let selectedChoice = choiceRef.current?.getSelected();
@@ -94,10 +96,15 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
         selectedChoice.id,
         selectedChoice.text,
       );
+
       const answers = new Map<number, string[]>();
-      response.answerCount.forEach((cnt, idx) =>
-        answers.set(idx + 1, Array(cnt).fill(userStatus.color)),
-      );
+      // 回答可能な場合のみ結果を見る
+      if (currentQuiz.canAnswer) {
+        response.answerCount.forEach((cnt, idx) =>
+          answers.set(idx + 1, Array(cnt).fill(userStatus.color)),
+        );
+        setResults([response.isCorrect]);
+      }
       setAnswerMap(answers);
     } else {
       setAnswerMap(new Map<number, string[]>());
@@ -194,12 +201,28 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
           {!(isEnableAnswer && currentQuiz.canAnswer) && (
             <div css={maskStyle}>
               {isCalling ? (
-                <p style={{ color: "white" }}>Connecting...</p>
+                <p style={{ color: "white", alignSelf: "center" }}>
+                  Connecting...
+                </p>
+              ) : !currentQuiz.canAnswer ? (
+                <p style={{ color: "white", alignSelf: "center" }}>
+                  囚われてしまったので答えられない！
+                </p>
               ) : (
-                !currentQuiz.canAnswer && (
-                  <p style={{ color: "white" }}>
-                    囚われてしまったので答えられない！
-                  </p>
+                results.length == 1 && (
+                  <h2
+                    style={{
+                      alignSelf: "flex-start",
+                      color: results[0]
+                        ? "var(--main-color-2-light)"
+                        : "var(--main-color-1-dark)",
+                    }}
+                    css={css`
+                      animation: ${animation} 3s linear;
+                    `}
+                  >
+                    {results[0] ? "正解" : "不正解"}
+                  </h2>
                 )
               )}
             </div>
@@ -248,6 +271,7 @@ const containerStyle = css`
 `;
 
 const maskStyle = css`
+  display: flex;
   position: absolute;
   top: 0;
   left: 0;
@@ -257,8 +281,18 @@ const maskStyle = css`
   border-radius: 6px;
   background-color: rgba(64, 64, 64, 0.8);
   align-content: center;
+  justify-content: center;
   z-index: 100;
   pointer-events: all;
+`;
+
+const animation = keyframes`
+  0%, 50%, 100% {
+    transform: scale(1);
+  }
+  25%, 75% {
+    transform: scale(1.5);
+  }
 `;
 
 export default QuizPage;
