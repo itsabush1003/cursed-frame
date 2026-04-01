@@ -9,8 +9,8 @@ const cache = new Map<
   UserType,
   Promise<
     {
-      admin: typeof import("../services/rpc/admin-client.ts");
-      guest: typeof import("../services/rpc/guest-client.ts");
+      admin: typeof import("@/services/rpc/admin-client.ts");
+      guest: typeof import("@/services/rpc/guest-client.ts");
     }[UserType]
   >
 >();
@@ -19,27 +19,20 @@ const useRpcClient = () => {
   const { userStatus } = useContext(UserStatusContext);
   const clientPromise = useMemo(() => {
     const cachedPromise = cache.get(userStatus.type);
-    if (cachedPromise) return cachedPromise;
-    if (userStatus.type === "admin") {
-      const promise = import("../services/rpc/admin-client.ts");
-      cache.set(userStatus.type, promise);
-      return promise;
-    } else {
-      const promise = import("../services/rpc/guest-client.ts");
-      cache.set(userStatus.type, promise);
-      return promise;
-    }
+    if (cachedPromise) return { type: userStatus.type, promise: cachedPromise };
+    const promise =
+      userStatus.type === "admin"
+        ? import("@/services/rpc/admin-client.ts")
+        : import("@/services/rpc/guest-client.ts");
+    cache.set(userStatus.type, promise);
+    return { type: userStatus.type, promise: promise };
   }, [userStatus.type]);
   const clientModule = use<
-    | typeof import("../services/rpc/admin-client.ts")
-    | typeof import("../services/rpc/guest-client.ts")
-  >(clientPromise);
+    | typeof import("@/services/rpc/admin-client.ts")
+    | typeof import("@/services/rpc/guest-client.ts")
+  >(clientPromise.promise);
   const client = useMemo(() => {
-    if ("registAdminUser" in clientModule.default) {
-      return clientModule.default;
-    } else {
-      return clientModule.default(() => userStatus.token);
-    }
+    return clientModule.default(() => userStatus.token);
   }, [clientModule, userStatus]);
   return client;
 };
