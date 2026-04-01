@@ -237,28 +237,29 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
 const animationStyle = css`
   position: relative;
   height: calc(90% - 1em);
+  transform: translateY(100%);
 
   &.answers-enter {
-    transform: "translateY(100%)";
+    transform: translateY(100%);
   }
   &.answers-enter-active {
-    transform: "translateY(0)";
-    transition-duration: "${uiAnimateDuration}ms";
-    transition-property: "transform";
+    transform: translateY(0);
+    transition-duration: ${uiAnimateDuration}ms;
+    transition-property: transform;
   }
   &.answers-enter-done {
-    transform: "translateY(0)";
+    transform: translateY(0);
   }
   &.answers-exit {
-    transform: "translateY(0)";
+    transform: translateY(0);
   }
   &.answers-exit-active {
-    transform: "translateY(100%)";
-    transition-duration: "${uiAnimateDuration}ms";
-    transition-property: "transform";
+    transform: translateY(100%);
+    transition-duration: ${uiAnimateDuration}ms;
+    transition-property: transform;
   }
   &.answers-exit-done {
-    transform: "translateY(100%)";
+    transform: translateY(100%);
   }
 `;
 
