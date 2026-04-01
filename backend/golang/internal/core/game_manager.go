@@ -62,20 +62,21 @@ const (
 )
 
 type questRoom struct {
-	teams            map[TeamID][]uuid.UUID
-	conn             map[uuid.UUID]chan<- Quiz
-	hintCh           chan string
-	answerListener   map[TeamID]chan Choice
-	answerSender     map[uuid.UUID]chan AnswerWithMap
-	nextQuizNotifier chan struct{}
-	mu               sync.RWMutex
-	ctx              context.Context
-	doneNotifier     context.CancelFunc
-	currentTarget    uuid.UUID
-	currentAnswer    Choice
-	quizCount        int
-	teamStats        map[TeamID]int
-	personalStats    map[uuid.UUID]int
+	teams              map[TeamID][]uuid.UUID
+	conn               map[uuid.UUID]chan<- Quiz
+	hintCh             chan string
+	answerListener     map[TeamID]chan Choice
+	answerSender       map[uuid.UUID]chan AnswerWithMap
+	startCountNotifier chan struct{}
+	nextQuizNotifier   chan struct{}
+	mu                 sync.RWMutex
+	ctx                context.Context
+	doneNotifier       context.CancelFunc
+	currentTarget      uuid.UUID
+	currentAnswer      Choice
+	quizCount          int
+	teamStats          map[TeamID]int
+	personalStats      map[uuid.UUID]int
 }
 
 func (qr *questRoom) SetCurrent(target uuid.UUID, answer Choice) {
@@ -330,9 +331,9 @@ func (gm *GameManager) GetTeams() map[TeamID][]uuid.UUID {
 	return teams
 }
 
-func (gm *GameManager) QuestStart() (<-chan struct{}, error) {
+func (gm *GameManager) QuestStart() (count <-chan struct{}, next <-chan struct{}, err error) {
 	if gm.state != CLOSED && gm.state != INGAME {
-		return nil, errors.New("Not quest ready or quest has already done")
+		return nil, nil, errors.New("Not quest ready or quest has already done")
 	}
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
@@ -343,7 +344,7 @@ func (gm *GameManager) QuestStart() (<-chan struct{}, error) {
 			gm.room.answerSender[uid] = make(chan AnswerWithMap)
 		}
 	}
-	return gm.room.nextQuizNotifier, nil
+	return gm.room.startCountNotifier, gm.room.nextQuizNotifier, nil
 }
 
 func (gm *GameManager) GetConnectedMembers() map[TeamID]uint {
@@ -377,6 +378,18 @@ func (gm *GameManager) Broadcast(target uuid.UUID, quiz Quiz, correct Choice) er
 	gm.room.SetCurrent(target, correct)
 	gm.room.PublishQuiz(quiz)
 	return nil
+}
+
+func (gm *GameManager) StartCount() error {
+	if gm.state != INGAME {
+		return errors.New("Server is not in game mode")
+	}
+	select {
+	case gm.room.startCountNotifier <- struct{}{}:
+		return nil
+	case <-time.After(time.Second):
+		return errors.New("Timed out")
+	}
 }
 
 func (gm *GameManager) CheckHint() <-chan string {
@@ -595,18 +608,19 @@ func NewGameManager(maxUserNum int, teamNum int) *GameManager {
 				doneNotifier: lobbyDone,
 			},
 			room: &questRoom{
-				teams:            make(map[TeamID][]uuid.UUID, teamNum),
-				conn:             make(map[uuid.UUID]chan<- Quiz, maxUserNum),
-				hintCh:           make(chan string),
-				answerListener:   make(map[TeamID]chan Choice, teamNum),
-				answerSender:     make(map[uuid.UUID]chan AnswerWithMap, maxUserNum),
-				nextQuizNotifier: make(chan struct{}),
-				mu:               sync.RWMutex{},
-				ctx:              roomCtx,
-				doneNotifier:     roomDone,
-				quizCount:        0,
-				teamStats:        make(map[TeamID]int, teamNum),
-				personalStats:    make(map[uuid.UUID]int, maxUserNum),
+				teams:              make(map[TeamID][]uuid.UUID, teamNum),
+				conn:               make(map[uuid.UUID]chan<- Quiz, maxUserNum),
+				hintCh:             make(chan string),
+				answerListener:     make(map[TeamID]chan Choice, teamNum),
+				answerSender:       make(map[uuid.UUID]chan AnswerWithMap, maxUserNum),
+				startCountNotifier: make(chan struct{}),
+				nextQuizNotifier:   make(chan struct{}),
+				mu:                 sync.RWMutex{},
+				ctx:                roomCtx,
+				doneNotifier:       roomDone,
+				quizCount:          0,
+				teamStats:          make(map[TeamID]int, teamNum),
+				personalStats:      make(map[uuid.UUID]int, maxUserNum),
 			},
 		}
 	})()

@@ -26,7 +26,7 @@ func (asqu *AdminStartQuestUsecase) Execute(
 	onTick func(core.Quiz, string) error,
 	failedCallback func(error) error,
 ) error {
-	goNext, err := asqu.gm.QuestStart()
+	startCount, goNext, err := asqu.gm.QuestStart()
 	if err != nil {
 		return failedCallback(err)
 	}
@@ -50,6 +50,10 @@ checkConnectionLoop:
 			}
 		}
 	}
+	ticker := time.NewTicker(time.Second)
+	// quizLoopに入るまで止めておく
+	ticker.Stop()
+	defer ticker.Stop()
 	for _, tid := range shuffledTIDs {
 		teamUsers := teams[tid]
 		shuffledUsers := util.ShuffleSlice(teamUsers)
@@ -113,10 +117,10 @@ checkConnectionLoop:
 				}
 			}
 			var remaindTime int = core.InitialRemaindTime
-			ticker := time.NewTicker(time.Second)
-			defer ticker.Stop()
 			var onTickFailedCount int = 0
 			var hint string = ""
+			var canCountdown bool = false
+			ticker.Reset(time.Second)
 		quizLoop:
 			for {
 				select {
@@ -128,6 +132,8 @@ checkConnectionLoop:
 					if remaindTime > 0 {
 						remaindTime += core.IncreaseTimeHintTaken
 					}
+				case <-startCount:
+					canCountdown = true
 				case <-ticker.C:
 					quiz.RemainedTime = remaindTime
 					asqu.gm.Broadcast(uid, quiz, core.Choice{
@@ -142,9 +148,12 @@ checkConnectionLoop:
 					} else {
 						onTickFailedCount = 0
 					}
-					remaindTime--
+					if canCountdown {
+						remaindTime--
+					}
 				}
 			}
+			ticker.Stop()
 		}
 	}
 

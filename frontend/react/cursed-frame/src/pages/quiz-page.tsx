@@ -123,9 +123,13 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
         } else {
           setAnswerMap(undefined);
           if (prev.teamId !== response.targetTeamId) {
-            setTimeout(() => setShowQuiz(true), 1000);
+            setTimeout(() => {
+              setShowQuiz(true);
+              if ("readyQuiz" in client) client.readyQuiz({});
+            }, 1000);
           } else {
             setShowQuiz(true);
+            if ("readyQuiz" in client) client.readyQuiz({});
           }
           setIsEnableAnswer(true);
           return {

@@ -145,10 +145,11 @@ func main() {
 	rejectUserUsecase := usecase.NewRejectUserUsecase(gameManager, userRepository)
 	changeTeamUsecase := usecase.NewChangeTeamUsecase(userRepository)
 	adminStartQuestUsecase := usecase.NewAdminStartQuestUsecase(gameManager, userRepository, userImageRepository, userProfileRepository, profileQuestionRepository)
+	readyQuizUsecase := usecase.NewReadyQuizUsecase(gameManager)
 	checkAnswersUsecase := usecase.NewCheckAnswersUsecase(gameManager)
 	nextQuizUsecase := usecase.NewNextQuizUsecase(gameManager)
 	endQuestUsecase := usecase.NewEndQuestUsecase(gameManager, userRepository, infra.ResultStateMapper)
-	adminServiceHandler := rpccontroller.NewAdminServiceHandler(openEntryUsecase, closeEntryUsecase, rejectUserUsecase, changeTeamUsecase, adminStartQuestUsecase, checkAnswersUsecase, nextQuizUsecase, endQuestUsecase, userNum)
+	adminServiceHandler := rpccontroller.NewAdminServiceHandler(openEntryUsecase, closeEntryUsecase, rejectUserUsecase, changeTeamUsecase, adminStartQuestUsecase, readyQuizUsecase, checkAnswersUsecase, nextQuizUsecase, endQuestUsecase, userNum)
 	router := infra.NewRouter(fileHandler, imageHandler, entryServiceHandler, lobbyServiceHandler, questServiceHandler, adminServiceHandler, adminCheckMiddleware, authorizeMiddleware, rateLimitMiddleware, corsMiddleware)
 
 	server := infra.NewServer(":8888", tlsConfig, router)

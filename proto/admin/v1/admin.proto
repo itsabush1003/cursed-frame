@@ -80,6 +80,7 @@ service AdminService {
   rpc RejectUser(RejectUserRequest) returns (google.protobuf.Empty);
   rpc ChangeTeam(ChangeTeamRequest) returns (google.protobuf.Empty);
   rpc StartQuest(google.protobuf.Empty) returns (stream StartQuestResponse);
+  rpc ReadyQuiz(google.protobuf.Empty) returns (google.protobuf.Empty);
   rpc CheckAnswers(google.protobuf.Empty) returns (CheckAnswersResponse);
   rpc NextQuiz(google.protobuf.Empty) returns (google.protobuf.Empty);
   rpc EndQuest(google.protobuf.Empty) returns (EndQuestResponse);
