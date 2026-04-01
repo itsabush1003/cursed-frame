@@ -737,7 +737,7 @@ const file_admin_v1_admin_proto_rawDesc = "" +
 	"team_order\x18\x04 \x01(\rR\tteamOrder\"h\n" +
 	"\x10EndQuestResponse\x12)\n" +
 	"\x06result\x18\x01 \x01(\x0e2\x11.common.v1.ResultR\x06result\x12)\n" +
-	"\x05stats\x18\x02 \x03(\v2\x13.admin.v1.TeamStatsR\x05stats2\xee\x04\n" +
+	"\x05stats\x18\x02 \x03(\v2\x13.admin.v1.TeamStatsR\x05stats2\xab\x05\n" +
 	"\fAdminService\x12L\n" +
 	"\x0fRegistAdminUser\x12\x16.google.protobuf.Empty\x1a!.admin.v1.RegistAdminUserResponse\x12B\n" +
 	"\tOpenEntry\x12\x16.google.protobuf.Empty\x1a\x1b.admin.v1.OpenEntryResponse0\x01\x12<\n" +
@@ -748,7 +748,8 @@ const file_admin_v1_admin_proto_rawDesc = "" +
 	"\n" +
 	"ChangeTeam\x12\x1b.admin.v1.ChangeTeamRequest\x1a\x16.google.protobuf.Empty\x12D\n" +
 	"\n" +
-	"StartQuest\x12\x16.google.protobuf.Empty\x1a\x1c.admin.v1.StartQuestResponse0\x01\x12F\n" +
+	"StartQuest\x12\x16.google.protobuf.Empty\x1a\x1c.admin.v1.StartQuestResponse0\x01\x12;\n" +
+	"\tReadyQuiz\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\x12F\n" +
 	"\fCheckAnswers\x12\x16.google.protobuf.Empty\x1a\x1e.admin.v1.CheckAnswersResponse\x12:\n" +
 	"\bNextQuiz\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\x12>\n" +
 	"\bEndQuest\x12\x16.google.protobuf.Empty\x1a\x1a.admin.v1.EndQuestResponseBTZRgithub.com/itsuabush1003/cursed-frame/backend/golang/internal/gen/admin/v1;adminv1b\x06proto3"
@@ -796,20 +797,22 @@ var file_admin_v1_admin_proto_depIdxs = []int32{
 	3,  // 10: admin.v1.AdminService.RejectUser:input_type -> admin.v1.RejectUserRequest
 	4,  // 11: admin.v1.AdminService.ChangeTeam:input_type -> admin.v1.ChangeTeamRequest
 	13, // 12: admin.v1.AdminService.StartQuest:input_type -> google.protobuf.Empty
-	13, // 13: admin.v1.AdminService.CheckAnswers:input_type -> google.protobuf.Empty
-	13, // 14: admin.v1.AdminService.NextQuiz:input_type -> google.protobuf.Empty
-	13, // 15: admin.v1.AdminService.EndQuest:input_type -> google.protobuf.Empty
-	0,  // 16: admin.v1.AdminService.RegistAdminUser:output_type -> admin.v1.RegistAdminUserResponse
-	2,  // 17: admin.v1.AdminService.OpenEntry:output_type -> admin.v1.OpenEntryResponse
-	13, // 18: admin.v1.AdminService.CloseEntry:output_type -> google.protobuf.Empty
-	13, // 19: admin.v1.AdminService.RejectUser:output_type -> google.protobuf.Empty
-	13, // 20: admin.v1.AdminService.ChangeTeam:output_type -> google.protobuf.Empty
-	5,  // 21: admin.v1.AdminService.StartQuest:output_type -> admin.v1.StartQuestResponse
-	7,  // 22: admin.v1.AdminService.CheckAnswers:output_type -> admin.v1.CheckAnswersResponse
-	13, // 23: admin.v1.AdminService.NextQuiz:output_type -> google.protobuf.Empty
-	10, // 24: admin.v1.AdminService.EndQuest:output_type -> admin.v1.EndQuestResponse
-	16, // [16:25] is the sub-list for method output_type
-	7,  // [7:16] is the sub-list for method input_type
+	13, // 13: admin.v1.AdminService.ReadyQuiz:input_type -> google.protobuf.Empty
+	13, // 14: admin.v1.AdminService.CheckAnswers:input_type -> google.protobuf.Empty
+	13, // 15: admin.v1.AdminService.NextQuiz:input_type -> google.protobuf.Empty
+	13, // 16: admin.v1.AdminService.EndQuest:input_type -> google.protobuf.Empty
+	0,  // 17: admin.v1.AdminService.RegistAdminUser:output_type -> admin.v1.RegistAdminUserResponse
+	2,  // 18: admin.v1.AdminService.OpenEntry:output_type -> admin.v1.OpenEntryResponse
+	13, // 19: admin.v1.AdminService.CloseEntry:output_type -> google.protobuf.Empty
+	13, // 20: admin.v1.AdminService.RejectUser:output_type -> google.protobuf.Empty
+	13, // 21: admin.v1.AdminService.ChangeTeam:output_type -> google.protobuf.Empty
+	5,  // 22: admin.v1.AdminService.StartQuest:output_type -> admin.v1.StartQuestResponse
+	13, // 23: admin.v1.AdminService.ReadyQuiz:output_type -> google.protobuf.Empty
+	7,  // 24: admin.v1.AdminService.CheckAnswers:output_type -> admin.v1.CheckAnswersResponse
+	13, // 25: admin.v1.AdminService.NextQuiz:output_type -> google.protobuf.Empty
+	10, // 26: admin.v1.AdminService.EndQuest:output_type -> admin.v1.EndQuestResponse
+	17, // [17:27] is the sub-list for method output_type
+	7,  // [7:17] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name
 	7,  // [7:7] is the sub-list for extension extendee
 	0,  // [0:7] is the sub-list for field type_name

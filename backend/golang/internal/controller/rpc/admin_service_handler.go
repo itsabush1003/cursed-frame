@@ -20,6 +20,7 @@ type AdminServiceHandler struct {
 	ruu     *usecase.RejectUserUsecase
 	ctu     *usecase.ChangeTeamUsecase
 	asqu    *usecase.AdminStartQuestUsecase
+	rqu     *usecase.ReadyQuizUsecase
 	cau     *usecase.CheckAnswersUsecase
 	nqu     *usecase.NextQuizUsecase
 	equ     *usecase.EndQuestUsecase
@@ -108,6 +109,13 @@ func (ash *AdminServiceHandler) StartQuest(ctx context.Context, r *connect.Reque
 	return nil
 }
 
+func (ash *AdminServiceHandler) ReadyQuiz(ctx context.Context, r *connect.Request[emptypb.Empty]) (*connect.Response[emptypb.Empty], error) {
+	if err := ash.rqu.Execute(); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	return connect.NewResponse(&emptypb.Empty{}), nil
+}
+
 func (ash *AdminServiceHandler) CheckAnswers(ctx context.Context, r *connect.Request[emptypb.Empty]) (*connect.Response[adminv1.CheckAnswersResponse], error) {
 	results, err := ash.cau.Execute()
 	if err != nil {
@@ -174,6 +182,7 @@ func NewAdminServiceHandler(
 	ruu *usecase.RejectUserUsecase,
 	ctu *usecase.ChangeTeamUsecase,
 	asqu *usecase.AdminStartQuestUsecase,
+	rqu *usecase.ReadyQuizUsecase,
 	cau *usecase.CheckAnswersUsecase,
 	nqu *usecase.NextQuizUsecase,
 	equ *usecase.EndQuestUsecase,
@@ -185,6 +194,7 @@ func NewAdminServiceHandler(
 		ruu:     ruu,
 		ctu:     ctu,
 		asqu:    asqu,
+		rqu:     rqu,
 		cau:     cau,
 		nqu:     nqu,
 		equ:     equ,

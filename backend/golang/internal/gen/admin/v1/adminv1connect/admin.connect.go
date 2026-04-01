@@ -47,6 +47,8 @@ const (
 	AdminServiceChangeTeamProcedure = "/admin.v1.AdminService/ChangeTeam"
 	// AdminServiceStartQuestProcedure is the fully-qualified name of the AdminService's StartQuest RPC.
 	AdminServiceStartQuestProcedure = "/admin.v1.AdminService/StartQuest"
+	// AdminServiceReadyQuizProcedure is the fully-qualified name of the AdminService's ReadyQuiz RPC.
+	AdminServiceReadyQuizProcedure = "/admin.v1.AdminService/ReadyQuiz"
 	// AdminServiceCheckAnswersProcedure is the fully-qualified name of the AdminService's CheckAnswers
 	// RPC.
 	AdminServiceCheckAnswersProcedure = "/admin.v1.AdminService/CheckAnswers"
@@ -64,6 +66,7 @@ type AdminServiceClient interface {
 	RejectUser(context.Context, *connect.Request[v1.RejectUserRequest]) (*connect.Response[emptypb.Empty], error)
 	ChangeTeam(context.Context, *connect.Request[v1.ChangeTeamRequest]) (*connect.Response[emptypb.Empty], error)
 	StartQuest(context.Context, *connect.Request[emptypb.Empty]) (*connect.ServerStreamForClient[v1.StartQuestResponse], error)
+	ReadyQuiz(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[emptypb.Empty], error)
 	CheckAnswers(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.CheckAnswersResponse], error)
 	NextQuiz(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[emptypb.Empty], error)
 	EndQuest(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.EndQuestResponse], error)
@@ -116,6 +119,12 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(adminServiceMethods.ByName("StartQuest")),
 			connect.WithClientOptions(opts...),
 		),
+		readyQuiz: connect.NewClient[emptypb.Empty, emptypb.Empty](
+			httpClient,
+			baseURL+AdminServiceReadyQuizProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("ReadyQuiz")),
+			connect.WithClientOptions(opts...),
+		),
 		checkAnswers: connect.NewClient[emptypb.Empty, v1.CheckAnswersResponse](
 			httpClient,
 			baseURL+AdminServiceCheckAnswersProcedure,
@@ -145,6 +154,7 @@ type adminServiceClient struct {
 	rejectUser      *connect.Client[v1.RejectUserRequest, emptypb.Empty]
 	changeTeam      *connect.Client[v1.ChangeTeamRequest, emptypb.Empty]
 	startQuest      *connect.Client[emptypb.Empty, v1.StartQuestResponse]
+	readyQuiz       *connect.Client[emptypb.Empty, emptypb.Empty]
 	checkAnswers    *connect.Client[emptypb.Empty, v1.CheckAnswersResponse]
 	nextQuiz        *connect.Client[emptypb.Empty, emptypb.Empty]
 	endQuest        *connect.Client[emptypb.Empty, v1.EndQuestResponse]
@@ -180,6 +190,11 @@ func (c *adminServiceClient) StartQuest(ctx context.Context, req *connect.Reques
 	return c.startQuest.CallServerStream(ctx, req)
 }
 
+// ReadyQuiz calls admin.v1.AdminService.ReadyQuiz.
+func (c *adminServiceClient) ReadyQuiz(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[emptypb.Empty], error) {
+	return c.readyQuiz.CallUnary(ctx, req)
+}
+
 // CheckAnswers calls admin.v1.AdminService.CheckAnswers.
 func (c *adminServiceClient) CheckAnswers(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1.CheckAnswersResponse], error) {
 	return c.checkAnswers.CallUnary(ctx, req)
@@ -203,6 +218,7 @@ type AdminServiceHandler interface {
 	RejectUser(context.Context, *connect.Request[v1.RejectUserRequest]) (*connect.Response[emptypb.Empty], error)
 	ChangeTeam(context.Context, *connect.Request[v1.ChangeTeamRequest]) (*connect.Response[emptypb.Empty], error)
 	StartQuest(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[v1.StartQuestResponse]) error
+	ReadyQuiz(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[emptypb.Empty], error)
 	CheckAnswers(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.CheckAnswersResponse], error)
 	NextQuiz(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[emptypb.Empty], error)
 	EndQuest(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.EndQuestResponse], error)
@@ -251,6 +267,12 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(adminServiceMethods.ByName("StartQuest")),
 		connect.WithHandlerOptions(opts...),
 	)
+	adminServiceReadyQuizHandler := connect.NewUnaryHandler(
+		AdminServiceReadyQuizProcedure,
+		svc.ReadyQuiz,
+		connect.WithSchema(adminServiceMethods.ByName("ReadyQuiz")),
+		connect.WithHandlerOptions(opts...),
+	)
 	adminServiceCheckAnswersHandler := connect.NewUnaryHandler(
 		AdminServiceCheckAnswersProcedure,
 		svc.CheckAnswers,
@@ -283,6 +305,8 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceChangeTeamHandler.ServeHTTP(w, r)
 		case AdminServiceStartQuestProcedure:
 			adminServiceStartQuestHandler.ServeHTTP(w, r)
+		case AdminServiceReadyQuizProcedure:
+			adminServiceReadyQuizHandler.ServeHTTP(w, r)
 		case AdminServiceCheckAnswersProcedure:
 			adminServiceCheckAnswersHandler.ServeHTTP(w, r)
 		case AdminServiceNextQuizProcedure:
@@ -320,6 +344,10 @@ func (UnimplementedAdminServiceHandler) ChangeTeam(context.Context, *connect.Req
 
 func (UnimplementedAdminServiceHandler) StartQuest(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[v1.StartQuestResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.StartQuest is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) ReadyQuiz(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.ReadyQuiz is not implemented"))
 }
 
 func (UnimplementedAdminServiceHandler) CheckAnswers(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.CheckAnswersResponse], error) {
