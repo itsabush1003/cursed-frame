@@ -117,6 +117,7 @@ func main() {
 	fileHandler := filecontroller.NewStaticFileHandler(http.FS(dist))
 	c := cache.New(10*time.Minute, 30*time.Minute)
 	userRepository := repository.NewUserRepository(c, database)
+	adminCheckMiddleware := middleware.NewAdminCheckMiddleware()
 	authorizeMiddleware := middleware.NewAuthorizeMiddleware(userRepository)
 	corsMiddleware := middleware.NewCorsMiddleware()
 	rateLimitMiddleware := middleware.NewRateLimitMiddleware(userNum)
@@ -148,7 +149,7 @@ func main() {
 	nextQuizUsecase := usecase.NewNextQuizUsecase(gameManager)
 	endQuestUsecase := usecase.NewEndQuestUsecase(gameManager, userRepository, infra.ResultStateMapper)
 	adminServiceHandler := rpccontroller.NewAdminServiceHandler(openEntryUsecase, closeEntryUsecase, rejectUserUsecase, changeTeamUsecase, adminStartQuestUsecase, checkAnswersUsecase, nextQuizUsecase, endQuestUsecase, userNum)
-	router := infra.NewRouter(fileHandler, imageHandler, entryServiceHandler, lobbyServiceHandler, questServiceHandler, adminServiceHandler, authorizeMiddleware, rateLimitMiddleware, corsMiddleware)
+	router := infra.NewRouter(fileHandler, imageHandler, entryServiceHandler, lobbyServiceHandler, questServiceHandler, adminServiceHandler, adminCheckMiddleware, authorizeMiddleware, rateLimitMiddleware, corsMiddleware)
 
 	server := infra.NewServer(":8888", tlsConfig, router)
 	println(fmt.Sprintf("Server started at :8888%s\n\tguest: %s", router.AdminPath, router.GuestPath))

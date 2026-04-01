@@ -46,6 +46,7 @@ func NewRouter(
 	lobbyServiceHandler *rpccontroller.LobbyServiceHandler,
 	questServiceHandler *rpccontroller.QuestServiceHandler,
 	adminServiceHandler *rpccontroller.AdminServiceHandler,
+	adminCheckMiddleware *middleware.AdminCheckMiddleware,
 	authorizeMiddleware *middleware.AuthorizeMiddleware,
 	rateLimitMiddleware *middleware.RateLimitMiddleware,
 	corsMiddleware *middleware.CorsMiddleware,
@@ -97,10 +98,12 @@ func NewRouter(
 	guestRpcGroup.Handle(questPath, http.StripPrefix(guestPath+"/rpc", questHandler))
 
 	adminRpcGroup := adminGroup.Mount("/rpc")
+	// adminUserの登録にguestのentryServiceを流用
+	adminRpcGroup.Handle(entryPath, http.StripPrefix(adminPath+"/rpc", entryHandler))
 	adminsPath, adminHandler := adminv1connect.NewAdminServiceHandler(
 		adminServiceHandler,
 		// Validation via Protovalidate is almost always recommended
-		connect.WithInterceptors(validate.NewInterceptor(), authorizeMiddleware),
+		connect.WithInterceptors(validate.NewInterceptor(), authorizeMiddleware, adminCheckMiddleware),
 	)
 	adminRpcGroup.Handle(adminsPath, http.StripPrefix(adminPath+"/rpc", adminHandler))
 

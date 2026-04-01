@@ -1,22 +1,29 @@
-import { useCallback, useState } from "react";
+import { useCallback, useContext, useMemo, useState } from "react";
 
 import { css } from "@emotion/react";
 
 import UsersTable, { type rowData } from "@/components/users-table";
+import { UserStatusContext } from "@/context/user-status-context";
 import useStreamObserver from "@/hooks/use-stream-observer";
-import adminClient from "@/services/rpc/admin-client";
+import getAdminClient from "@/services/rpc/admin-client";
 
 import type { OpenEntryResponse } from "@/gen/admin/v1/admin_pb";
 
 const LobbyViewerPage = ({ toNext }: { toNext: () => void }) => {
+  const { userStatus } = useContext(UserStatusContext);
   const [entryUsersData, setEntryUsersData] = useState<rowData[]>([]);
   const [isExpectedNumEntered, setIsExpectedNumEntered] =
     useState<boolean>(false);
+  const adminClient = useMemo(
+    () => getAdminClient(() => userStatus.token),
+    [userStatus.token],
+  );
   const lobbyStatusStream = useCallback(
     (signal: AbortSignal) => adminClient.openEntry({}, { signal: signal }),
-    [],
+    [adminClient],
   );
-  const reflectLobbyStatus = useCallback((res: OpenEntryResponse) => {
+  const reflectLobbyStatus = useCallback(
+    (res: OpenEntryResponse) => {
     const rowDataList: rowData[] = [];
     for (const userData of res.enteredUsers) {
       const rowData = {
@@ -42,7 +49,9 @@ const LobbyViewerPage = ({ toNext }: { toNext: () => void }) => {
     });
     if (rowDataList.length >= res.expectedUserNum)
       setIsExpectedNumEntered(true);
-  }, []);
+    },
+    [adminClient],
+  );
   const isLobbyReady = useStreamObserver(lobbyStatusStream, reflectLobbyStatus);
   const onCloseButton = async () => {
     if (!isExpectedNumEntered) {
