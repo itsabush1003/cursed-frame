@@ -51,6 +51,7 @@ public class CameraController : MonoBehaviour
             }
         }
     }
+
     [System.Serializable]
     private class TweenParamsList
     {
@@ -70,6 +71,7 @@ public class CameraController : MonoBehaviour
     {
         camera = GetComponent<Camera>();
     }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -147,6 +149,11 @@ public class CameraController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 囚われるアニメーションを再生する関数
+    /// </summary>
+    /// <param name="targetPosition">アニメーション終了時の移動後のワールド座標</param>
+    /// <returns>アニメーションのSequence</returns>
     public Sequence CaptureAnimation(Vector3 targetPosition)
     {
         basePosition = transform.position;
@@ -160,6 +167,11 @@ public class CameraController : MonoBehaviour
             }));
     }
 
+    /// <summary>
+    /// 解放されるアニメーションを再生する関数
+    /// 上のcaptureAnimationが実行される前に実行されるとおかしくなる可能性がある
+    /// </summary>
+    /// <returns>アニメーションのSequence</returns>
     public Sequence ReleaseAnimation()
     {
         return DOTween.Sequence()

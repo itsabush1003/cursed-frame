@@ -56,7 +56,7 @@ public class MagiciansController : MonoBehaviour
     /// キャラクタのGameObjectを取得する関数
     /// </summary>
     /// <param name="teamId">何番目のキャラクタか</param>
-    /// <returns></returns>
+    /// <returns>該当するGameObject</returns>
     public GameObject GetMagician(int teamId)
     {
         return magicians[teamId-1];

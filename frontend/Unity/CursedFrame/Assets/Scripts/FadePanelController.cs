@@ -23,6 +23,7 @@ public class FadePanelController : MonoBehaviour
         instance = this;
         DontDestroyOnLoad(gameObject);
     }
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -41,6 +42,7 @@ public class FadePanelController : MonoBehaviour
     /// <param name="targetAlpha">到達したい透明度　0fなら透明、1fなら真っ黒</param>
     /// <param name="duration">Fadeにかける時間</param>
     /// <param name="callback">Fade終了後に呼ばれるコールバック関数</param>
+    /// <returns>FadeアニメーションのTweener</returns>
     public Tweener Fade(float targetAlpha, float duration, System.Action callback = null)
     {
         return fadeImage.DOFade(targetAlpha, duration).OnComplete(() => callback?.Invoke());
