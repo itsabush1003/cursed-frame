@@ -31,6 +31,12 @@ public class MessageLiaison : MonoBehaviour
         public int teamNum;
     }
 
+    [Serializable]
+    private class BoolList
+    {
+        public bool[] boolList;
+    }
+
     private GameObject mainCamera = null;
     private FadePanelController fadeController = null;
     private GameManager gameManager = null;
@@ -163,8 +169,8 @@ public class MessageLiaison : MonoBehaviour
 
     public void StartAttackAnimation(string resultJson)
     {
-        bool[] results = JsonUtility.FromJson<bool[]>(resultJson);
-        _StartAttackAnimation(results);
+        BoolList results = JsonUtility.FromJson<BoolList>(resultJson);
+        _StartAttackAnimation(results.boolList);
     }
 
     private void _StartAttackAnimation(bool[] isCorrects)
