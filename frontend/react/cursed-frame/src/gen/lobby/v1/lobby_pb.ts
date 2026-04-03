@@ -13,7 +13,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file lobby/v1/lobby.proto.
  */
 export const file_lobby_v1_lobby: GenFile = /*@__PURE__*/
-  fileDesc("ChRsb2JieS92MS9sb2JieS5wcm90bxIIbG9iYnkudjEiIwoLTG9iYnlTdGF0dXMSFAoMaXNfYWxsX3JlYWR5GAEgASgIIjsKFFJlZ2lzdFByb2ZpbGVSZXF1ZXN0EhMKC3F1ZXN0aW9uX2lkGAEgASgNEg4KBmFuc3dlchgCIAEoCSJlChVSZWdpc3RQcm9maWxlUmVzcG9uc2USGAoQbmV4dF9xdWVzdGlvbl9pZBgBIAEoDRIaChJuZXh0X3F1ZXN0aW9uX3RleHQYAiABKAkSFgoObm9fbW9yZV9hbnN3ZXIYAyABKAgiNwoRR2V0VGVhbUlEUmVzcG9uc2USDwoHdGVhbV9pZBgBIAEoDRIRCgl0ZWFtX25hbWUYAiABKAkymwIKDExvYmJ5U2VydmljZRI8CglKb2luTG9iYnkSFi5nb29nbGUucHJvdG9idWYuRW1wdHkaFS5sb2JieS52MS5Mb2JieVN0YXR1czABElAKDVJlZ2lzdFByb2ZpbGUSHi5sb2JieS52MS5SZWdpc3RQcm9maWxlUmVxdWVzdBofLmxvYmJ5LnYxLlJlZ2lzdFByb2ZpbGVSZXNwb25zZRI5CgdJc1JlYWR5EhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5EkAKCUdldFRlYW1JRBIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRobLmxvYmJ5LnYxLkdldFRlYW1JRFJlc3BvbnNlQlRaUmdpdGh1Yi5jb20vaXRzdWFidXNoMTAwMy9jdXJzZWQtZnJhbWUvYmFja2VuZC9nb2xhbmcvaW50ZXJuYWwvZ2VuL2xvYmJ5L3YxO2xvYmJ5djFiBnByb3RvMw", [file_google_protobuf_empty]);
+  fileDesc("ChRsb2JieS92MS9sb2JieS5wcm90bxIIbG9iYnkudjEiIwoLTG9iYnlTdGF0dXMSFAoMaXNfYWxsX3JlYWR5GAEgASgIIjsKFFJlZ2lzdFByb2ZpbGVSZXF1ZXN0EhMKC3F1ZXN0aW9uX2lkGAEgASgNEg4KBmFuc3dlchgCIAEoCSJlChVSZWdpc3RQcm9maWxlUmVzcG9uc2USGAoQbmV4dF9xdWVzdGlvbl9pZBgBIAEoDRIaChJuZXh0X3F1ZXN0aW9uX3RleHQYAiABKAkSFgoObm9fbW9yZV9hbnN3ZXIYAyABKAgiSwoTR2V0VGVhbUluZm9SZXNwb25zZRIPCgd0ZWFtX2lkGAEgASgNEhIKCnRlYW1fY29sb3IYAiABKAkSDwoHbWVtYmVycxgDIAMoCTKfAgoMTG9iYnlTZXJ2aWNlEjwKCUpvaW5Mb2JieRIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRoVLmxvYmJ5LnYxLkxvYmJ5U3RhdHVzMAESUAoNUmVnaXN0UHJvZmlsZRIeLmxvYmJ5LnYxLlJlZ2lzdFByb2ZpbGVSZXF1ZXN0Gh8ubG9iYnkudjEuUmVnaXN0UHJvZmlsZVJlc3BvbnNlEjkKB0lzUmVhZHkSFi5nb29nbGUucHJvdG9idWYuRW1wdHkaFi5nb29nbGUucHJvdG9idWYuRW1wdHkSRAoLR2V0VGVhbUluZm8SFi5nb29nbGUucHJvdG9idWYuRW1wdHkaHS5sb2JieS52MS5HZXRUZWFtSW5mb1Jlc3BvbnNlQlRaUmdpdGh1Yi5jb20vaXRzdWFidXNoMTAwMy9jdXJzZWQtZnJhbWUvYmFja2VuZC9nb2xhbmcvaW50ZXJuYWwvZ2VuL2xvYmJ5L3YxO2xvYmJ5djFiBnByb3RvMw", [file_google_protobuf_empty]);
 
 /**
  * @generated from message lobby.v1.LobbyStatus
@@ -82,25 +82,30 @@ export const RegistProfileResponseSchema: GenMessage<RegistProfileResponse> = /*
   messageDesc(file_lobby_v1_lobby, 2);
 
 /**
- * @generated from message lobby.v1.GetTeamIDResponse
+ * @generated from message lobby.v1.GetTeamInfoResponse
  */
-export type GetTeamIDResponse = Message<"lobby.v1.GetTeamIDResponse"> & {
+export type GetTeamInfoResponse = Message<"lobby.v1.GetTeamInfoResponse"> & {
   /**
    * @generated from field: uint32 team_id = 1;
    */
   teamId: number;
 
   /**
-   * @generated from field: string team_name = 2;
+   * @generated from field: string team_color = 2;
    */
-  teamName: string;
+  teamColor: string;
+
+  /**
+   * @generated from field: repeated string members = 3;
+   */
+  members: string[];
 };
 
 /**
- * Describes the message lobby.v1.GetTeamIDResponse.
- * Use `create(GetTeamIDResponseSchema)` to create a new message.
+ * Describes the message lobby.v1.GetTeamInfoResponse.
+ * Use `create(GetTeamInfoResponseSchema)` to create a new message.
  */
-export const GetTeamIDResponseSchema: GenMessage<GetTeamIDResponse> = /*@__PURE__*/
+export const GetTeamInfoResponseSchema: GenMessage<GetTeamInfoResponse> = /*@__PURE__*/
   messageDesc(file_lobby_v1_lobby, 3);
 
 /**
@@ -132,12 +137,12 @@ export const LobbyService: GenService<{
     output: typeof EmptySchema;
   },
   /**
-   * @generated from rpc lobby.v1.LobbyService.GetTeamID
+   * @generated from rpc lobby.v1.LobbyService.GetTeamInfo
    */
-  getTeamID: {
+  getTeamInfo: {
     methodKind: "unary";
     input: typeof EmptySchema;
-    output: typeof GetTeamIDResponseSchema;
+    output: typeof GetTeamInfoResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_lobby_v1_lobby, 0);

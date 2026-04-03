@@ -386,6 +386,7 @@ func (x *StartQuestResponse) GetHintText() string {
 type TeamAnswer struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TeamId        uint32                 `protobuf:"varint,1,opt,name=team_id,json=teamId,proto3" json:"team_id,omitempty"`
+	TeamColor     string                 `protobuf:"bytes,4,opt,name=team_color,json=teamColor,proto3" json:"team_color,omitempty"`
 	Answer        *v1.Choice             `protobuf:"bytes,2,opt,name=answer,proto3" json:"answer,omitempty"`
 	IsCorrect     bool                   `protobuf:"varint,3,opt,name=is_correct,json=isCorrect,proto3" json:"is_correct,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -427,6 +428,13 @@ func (x *TeamAnswer) GetTeamId() uint32 {
 		return x.TeamId
 	}
 	return 0
+}
+
+func (x *TeamAnswer) GetTeamColor() string {
+	if x != nil {
+		return x.TeamColor
+	}
+	return ""
 }
 
 func (x *TeamAnswer) GetAnswer() *v1.Choice {
@@ -550,6 +558,7 @@ func (x *UserStats) GetPersonalOrder() uint32 {
 type TeamStats struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	TeamId          uint32                 `protobuf:"varint,1,opt,name=team_id,json=teamId,proto3" json:"team_id,omitempty"`
+	TeamColor       string                 `protobuf:"bytes,5,opt,name=team_color,json=teamColor,proto3" json:"team_color,omitempty"`
 	MembersStats    []*UserStats           `protobuf:"bytes,2,rep,name=members_stats,json=membersStats,proto3" json:"members_stats,omitempty"`
 	TeamCorrectRate float32                `protobuf:"fixed32,3,opt,name=team_correct_rate,json=teamCorrectRate,proto3" json:"team_correct_rate,omitempty"`
 	TeamOrder       uint32                 `protobuf:"varint,4,opt,name=team_order,json=teamOrder,proto3" json:"team_order,omitempty"`
@@ -592,6 +601,13 @@ func (x *TeamStats) GetTeamId() uint32 {
 		return x.TeamId
 	}
 	return 0
+}
+
+func (x *TeamStats) GetTeamColor() string {
+	if x != nil {
+		return x.TeamColor
+	}
+	return ""
 }
 
 func (x *TeamStats) GetMembersStats() []*UserStats {
@@ -696,10 +712,12 @@ const file_admin_v1_admin_proto_rawDesc = "" +
 	"\bquestion\x18\x04 \x01(\tR\bquestion\x12+\n" +
 	"\achoices\x18\x05 \x03(\v2\x11.common.v1.ChoiceR\achoices\x12\x1b\n" +
 	"\tlast_time\x18\x06 \x01(\x05R\blastTime\x12\x1b\n" +
-	"\thint_text\x18\a \x01(\tR\bhintText\"o\n" +
+	"\thint_text\x18\a \x01(\tR\bhintText\"\x8e\x01\n" +
 	"\n" +
 	"TeamAnswer\x12\x17\n" +
-	"\ateam_id\x18\x01 \x01(\rR\x06teamId\x12)\n" +
+	"\ateam_id\x18\x01 \x01(\rR\x06teamId\x12\x1d\n" +
+	"\n" +
+	"team_color\x18\x04 \x01(\tR\tteamColor\x12)\n" +
 	"\x06answer\x18\x02 \x01(\v2\x11.common.v1.ChoiceR\x06answer\x12\x1d\n" +
 	"\n" +
 	"is_correct\x18\x03 \x01(\bR\tisCorrect\"F\n" +
@@ -708,16 +726,18 @@ const file_admin_v1_admin_proto_rawDesc = "" +
 	"\tUserStats\x12\x1b\n" +
 	"\tuser_name\x18\x01 \x01(\tR\buserName\x12!\n" +
 	"\fcorrect_rate\x18\x02 \x01(\x02R\vcorrectRate\x12%\n" +
-	"\x0epersonal_order\x18\x03 \x01(\rR\rpersonalOrder\"\xa9\x01\n" +
+	"\x0epersonal_order\x18\x03 \x01(\rR\rpersonalOrder\"\xc8\x01\n" +
 	"\tTeamStats\x12\x17\n" +
-	"\ateam_id\x18\x01 \x01(\rR\x06teamId\x128\n" +
+	"\ateam_id\x18\x01 \x01(\rR\x06teamId\x12\x1d\n" +
+	"\n" +
+	"team_color\x18\x05 \x01(\tR\tteamColor\x128\n" +
 	"\rmembers_stats\x18\x02 \x03(\v2\x13.admin.v1.UserStatsR\fmembersStats\x12*\n" +
 	"\x11team_correct_rate\x18\x03 \x01(\x02R\x0fteamCorrectRate\x12\x1d\n" +
 	"\n" +
 	"team_order\x18\x04 \x01(\rR\tteamOrder\"h\n" +
 	"\x10EndQuestResponse\x12)\n" +
 	"\x06result\x18\x01 \x01(\x0e2\x11.common.v1.ResultR\x06result\x12)\n" +
-	"\x05stats\x18\x02 \x03(\v2\x13.admin.v1.TeamStatsR\x05stats2\xee\x04\n" +
+	"\x05stats\x18\x02 \x03(\v2\x13.admin.v1.TeamStatsR\x05stats2\xab\x05\n" +
 	"\fAdminService\x12L\n" +
 	"\x0fRegistAdminUser\x12\x16.google.protobuf.Empty\x1a!.admin.v1.RegistAdminUserResponse\x12B\n" +
 	"\tOpenEntry\x12\x16.google.protobuf.Empty\x1a\x1b.admin.v1.OpenEntryResponse0\x01\x12<\n" +
@@ -728,7 +748,8 @@ const file_admin_v1_admin_proto_rawDesc = "" +
 	"\n" +
 	"ChangeTeam\x12\x1b.admin.v1.ChangeTeamRequest\x1a\x16.google.protobuf.Empty\x12D\n" +
 	"\n" +
-	"StartQuest\x12\x16.google.protobuf.Empty\x1a\x1c.admin.v1.StartQuestResponse0\x01\x12F\n" +
+	"StartQuest\x12\x16.google.protobuf.Empty\x1a\x1c.admin.v1.StartQuestResponse0\x01\x12;\n" +
+	"\tReadyQuiz\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\x12F\n" +
 	"\fCheckAnswers\x12\x16.google.protobuf.Empty\x1a\x1e.admin.v1.CheckAnswersResponse\x12:\n" +
 	"\bNextQuiz\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\x12>\n" +
 	"\bEndQuest\x12\x16.google.protobuf.Empty\x1a\x1a.admin.v1.EndQuestResponseBTZRgithub.com/itsuabush1003/cursed-frame/backend/golang/internal/gen/admin/v1;adminv1b\x06proto3"
@@ -776,20 +797,22 @@ var file_admin_v1_admin_proto_depIdxs = []int32{
 	3,  // 10: admin.v1.AdminService.RejectUser:input_type -> admin.v1.RejectUserRequest
 	4,  // 11: admin.v1.AdminService.ChangeTeam:input_type -> admin.v1.ChangeTeamRequest
 	13, // 12: admin.v1.AdminService.StartQuest:input_type -> google.protobuf.Empty
-	13, // 13: admin.v1.AdminService.CheckAnswers:input_type -> google.protobuf.Empty
-	13, // 14: admin.v1.AdminService.NextQuiz:input_type -> google.protobuf.Empty
-	13, // 15: admin.v1.AdminService.EndQuest:input_type -> google.protobuf.Empty
-	0,  // 16: admin.v1.AdminService.RegistAdminUser:output_type -> admin.v1.RegistAdminUserResponse
-	2,  // 17: admin.v1.AdminService.OpenEntry:output_type -> admin.v1.OpenEntryResponse
-	13, // 18: admin.v1.AdminService.CloseEntry:output_type -> google.protobuf.Empty
-	13, // 19: admin.v1.AdminService.RejectUser:output_type -> google.protobuf.Empty
-	13, // 20: admin.v1.AdminService.ChangeTeam:output_type -> google.protobuf.Empty
-	5,  // 21: admin.v1.AdminService.StartQuest:output_type -> admin.v1.StartQuestResponse
-	7,  // 22: admin.v1.AdminService.CheckAnswers:output_type -> admin.v1.CheckAnswersResponse
-	13, // 23: admin.v1.AdminService.NextQuiz:output_type -> google.protobuf.Empty
-	10, // 24: admin.v1.AdminService.EndQuest:output_type -> admin.v1.EndQuestResponse
-	16, // [16:25] is the sub-list for method output_type
-	7,  // [7:16] is the sub-list for method input_type
+	13, // 13: admin.v1.AdminService.ReadyQuiz:input_type -> google.protobuf.Empty
+	13, // 14: admin.v1.AdminService.CheckAnswers:input_type -> google.protobuf.Empty
+	13, // 15: admin.v1.AdminService.NextQuiz:input_type -> google.protobuf.Empty
+	13, // 16: admin.v1.AdminService.EndQuest:input_type -> google.protobuf.Empty
+	0,  // 17: admin.v1.AdminService.RegistAdminUser:output_type -> admin.v1.RegistAdminUserResponse
+	2,  // 18: admin.v1.AdminService.OpenEntry:output_type -> admin.v1.OpenEntryResponse
+	13, // 19: admin.v1.AdminService.CloseEntry:output_type -> google.protobuf.Empty
+	13, // 20: admin.v1.AdminService.RejectUser:output_type -> google.protobuf.Empty
+	13, // 21: admin.v1.AdminService.ChangeTeam:output_type -> google.protobuf.Empty
+	5,  // 22: admin.v1.AdminService.StartQuest:output_type -> admin.v1.StartQuestResponse
+	13, // 23: admin.v1.AdminService.ReadyQuiz:output_type -> google.protobuf.Empty
+	7,  // 24: admin.v1.AdminService.CheckAnswers:output_type -> admin.v1.CheckAnswersResponse
+	13, // 25: admin.v1.AdminService.NextQuiz:output_type -> google.protobuf.Empty
+	10, // 26: admin.v1.AdminService.EndQuest:output_type -> admin.v1.EndQuestResponse
+	17, // [17:27] is the sub-list for method output_type
+	7,  // [7:17] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name
 	7,  // [7:7] is the sub-list for extension extendee
 	0,  // [0:7] is the sub-list for field type_name

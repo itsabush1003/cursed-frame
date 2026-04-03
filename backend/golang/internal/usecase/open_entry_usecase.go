@@ -30,6 +30,12 @@ func (oeu *OpenEntryUsecase) Execute(
 		select {
 		case <-ctx.Done():
 			doneCallback()
+			// teamIDの確定を通知する
+			// 本来はteamID確定後もtickが続くようにすべきだが、一旦これで暫定対応
+			// users取得をselectの前に出して共通化すると情報が古くなってしまうのでコピペで
+			uids := oeu.gm.GetLobbyUsers()
+			users, _ := oeu.ur.FetchByUserIDs(uids)
+			onTick(users)
 			return nil
 		case <-networkCtx.Done():
 			return failedCallback(networkCtx.Err())

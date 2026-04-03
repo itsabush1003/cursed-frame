@@ -178,28 +178,29 @@ func (x *RegistProfileResponse) GetNoMoreAnswer() bool {
 	return false
 }
 
-type GetTeamIDResponse struct {
+type GetTeamInfoResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TeamId        uint32                 `protobuf:"varint,1,opt,name=team_id,json=teamId,proto3" json:"team_id,omitempty"`
-	TeamName      string                 `protobuf:"bytes,2,opt,name=team_name,json=teamName,proto3" json:"team_name,omitempty"`
+	TeamColor     string                 `protobuf:"bytes,2,opt,name=team_color,json=teamColor,proto3" json:"team_color,omitempty"`
+	Members       []string               `protobuf:"bytes,3,rep,name=members,proto3" json:"members,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetTeamIDResponse) Reset() {
-	*x = GetTeamIDResponse{}
+func (x *GetTeamInfoResponse) Reset() {
+	*x = GetTeamInfoResponse{}
 	mi := &file_lobby_v1_lobby_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetTeamIDResponse) String() string {
+func (x *GetTeamInfoResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetTeamIDResponse) ProtoMessage() {}
+func (*GetTeamInfoResponse) ProtoMessage() {}
 
-func (x *GetTeamIDResponse) ProtoReflect() protoreflect.Message {
+func (x *GetTeamInfoResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_lobby_v1_lobby_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -211,23 +212,30 @@ func (x *GetTeamIDResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetTeamIDResponse.ProtoReflect.Descriptor instead.
-func (*GetTeamIDResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetTeamInfoResponse.ProtoReflect.Descriptor instead.
+func (*GetTeamInfoResponse) Descriptor() ([]byte, []int) {
 	return file_lobby_v1_lobby_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetTeamIDResponse) GetTeamId() uint32 {
+func (x *GetTeamInfoResponse) GetTeamId() uint32 {
 	if x != nil {
 		return x.TeamId
 	}
 	return 0
 }
 
-func (x *GetTeamIDResponse) GetTeamName() string {
+func (x *GetTeamInfoResponse) GetTeamColor() string {
 	if x != nil {
-		return x.TeamName
+		return x.TeamColor
 	}
 	return ""
+}
+
+func (x *GetTeamInfoResponse) GetMembers() []string {
+	if x != nil {
+		return x.Members
+	}
+	return nil
 }
 
 var File_lobby_v1_lobby_proto protoreflect.FileDescriptor
@@ -245,15 +253,17 @@ const file_lobby_v1_lobby_proto_rawDesc = "" +
 	"\x15RegistProfileResponse\x12(\n" +
 	"\x10next_question_id\x18\x01 \x01(\rR\x0enextQuestionId\x12,\n" +
 	"\x12next_question_text\x18\x02 \x01(\tR\x10nextQuestionText\x12$\n" +
-	"\x0eno_more_answer\x18\x03 \x01(\bR\fnoMoreAnswer\"I\n" +
-	"\x11GetTeamIDResponse\x12\x17\n" +
-	"\ateam_id\x18\x01 \x01(\rR\x06teamId\x12\x1b\n" +
-	"\tteam_name\x18\x02 \x01(\tR\bteamName2\x9b\x02\n" +
+	"\x0eno_more_answer\x18\x03 \x01(\bR\fnoMoreAnswer\"g\n" +
+	"\x13GetTeamInfoResponse\x12\x17\n" +
+	"\ateam_id\x18\x01 \x01(\rR\x06teamId\x12\x1d\n" +
+	"\n" +
+	"team_color\x18\x02 \x01(\tR\tteamColor\x12\x18\n" +
+	"\amembers\x18\x03 \x03(\tR\amembers2\x9f\x02\n" +
 	"\fLobbyService\x12<\n" +
 	"\tJoinLobby\x12\x16.google.protobuf.Empty\x1a\x15.lobby.v1.LobbyStatus0\x01\x12P\n" +
 	"\rRegistProfile\x12\x1e.lobby.v1.RegistProfileRequest\x1a\x1f.lobby.v1.RegistProfileResponse\x129\n" +
-	"\aIsReady\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\x12@\n" +
-	"\tGetTeamID\x12\x16.google.protobuf.Empty\x1a\x1b.lobby.v1.GetTeamIDResponseBTZRgithub.com/itsuabush1003/cursed-frame/backend/golang/internal/gen/lobby/v1;lobbyv1b\x06proto3"
+	"\aIsReady\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\x12D\n" +
+	"\vGetTeamInfo\x12\x16.google.protobuf.Empty\x1a\x1d.lobby.v1.GetTeamInfoResponseBTZRgithub.com/itsuabush1003/cursed-frame/backend/golang/internal/gen/lobby/v1;lobbyv1b\x06proto3"
 
 var (
 	file_lobby_v1_lobby_proto_rawDescOnce sync.Once
@@ -272,18 +282,18 @@ var file_lobby_v1_lobby_proto_goTypes = []any{
 	(*LobbyStatus)(nil),           // 0: lobby.v1.LobbyStatus
 	(*RegistProfileRequest)(nil),  // 1: lobby.v1.RegistProfileRequest
 	(*RegistProfileResponse)(nil), // 2: lobby.v1.RegistProfileResponse
-	(*GetTeamIDResponse)(nil),     // 3: lobby.v1.GetTeamIDResponse
+	(*GetTeamInfoResponse)(nil),   // 3: lobby.v1.GetTeamInfoResponse
 	(*emptypb.Empty)(nil),         // 4: google.protobuf.Empty
 }
 var file_lobby_v1_lobby_proto_depIdxs = []int32{
 	4, // 0: lobby.v1.LobbyService.JoinLobby:input_type -> google.protobuf.Empty
 	1, // 1: lobby.v1.LobbyService.RegistProfile:input_type -> lobby.v1.RegistProfileRequest
 	4, // 2: lobby.v1.LobbyService.IsReady:input_type -> google.protobuf.Empty
-	4, // 3: lobby.v1.LobbyService.GetTeamID:input_type -> google.protobuf.Empty
+	4, // 3: lobby.v1.LobbyService.GetTeamInfo:input_type -> google.protobuf.Empty
 	0, // 4: lobby.v1.LobbyService.JoinLobby:output_type -> lobby.v1.LobbyStatus
 	2, // 5: lobby.v1.LobbyService.RegistProfile:output_type -> lobby.v1.RegistProfileResponse
 	4, // 6: lobby.v1.LobbyService.IsReady:output_type -> google.protobuf.Empty
-	3, // 7: lobby.v1.LobbyService.GetTeamID:output_type -> lobby.v1.GetTeamIDResponse
+	3, // 7: lobby.v1.LobbyService.GetTeamInfo:output_type -> lobby.v1.GetTeamInfoResponse
 	4, // [4:8] is the sub-list for method output_type
 	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

@@ -6,7 +6,7 @@ export interface PersonalStats {
   order: number;
 }
 export interface TeamStats {
-  teamName: string;
+  teamColor: string;
   teamOrder: number;
   correctRate: number;
   memberStats: PersonalStats[];
@@ -27,7 +27,7 @@ const TeamStatsPanel = ({ teamStats }: { teamStats: TeamStats[] }) => {
         <thead>
           <tr key="first">
             <th rowSpan={2}>チーム順位</th>
-            <th colSpan={Math.floor(maxMemberNum / 2)}>チーム名</th>
+            <th colSpan={Math.floor(maxMemberNum / 2)}>チーム</th>
             <th colSpan={Math.ceil(maxMemberNum / 2)}>チーム正解率</th>
           </tr>
           <tr key="last">
@@ -42,10 +42,10 @@ const TeamStatsPanel = ({ teamStats }: { teamStats: TeamStats[] }) => {
             .map((ts) => {
               return (
                 <>
-                  <tr key={ts.teamName}>
+                  <tr key={ts.teamColor}>
                     <th rowSpan={2}>{ts.teamOrder}</th>
                     <td colSpan={Math.floor(maxMemberNum / 2)}>
-                      {ts.teamName}
+                      {ts.teamColor}
                     </td>
                     <td colSpan={Math.ceil(maxMemberNum / 2)}>
                       {toPercentString(ts.correctRate)}

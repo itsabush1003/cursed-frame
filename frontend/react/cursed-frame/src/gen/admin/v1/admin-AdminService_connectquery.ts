@@ -78,6 +78,23 @@ export const changeTeam = createQueryService({
 }).changeTeam;
 
 /**
+ * @generated from rpc admin.v1.AdminService.ReadyQuiz
+ */
+export const readyQuiz = createQueryService({
+  service: {
+    methods: {
+      readyQuiz: {
+        name: "ReadyQuiz",
+        kind: MethodKind.Unary,
+        I: Empty,
+        O: Empty,
+      },
+    },
+    typeName: "admin.v1.AdminService",
+  },
+}).readyQuiz;
+
+/**
  * @generated from rpc admin.v1.AdminService.CheckAnswers
  */
 export const checkAnswers = createQueryService({

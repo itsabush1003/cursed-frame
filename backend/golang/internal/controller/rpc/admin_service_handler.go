@@ -15,14 +15,16 @@ import (
 
 type AdminServiceHandler struct {
 	adminv1connect.UnimplementedAdminServiceHandler
-	oeu  *usecase.OpenEntryUsecase
-	ceu  *usecase.CloseEntryUsecase
-	ruu  *usecase.RejectUserUsecase
-	ctu  *usecase.ChangeTeamUsecase
-	asqu *usecase.AdminStartQuestUsecase
-	cau  *usecase.CheckAnswersUsecase
-	nqu  *usecase.NextQuizUsecase
-	equ  *usecase.EndQuestUsecase
+	oeu     *usecase.OpenEntryUsecase
+	ceu     *usecase.CloseEntryUsecase
+	ruu     *usecase.RejectUserUsecase
+	ctu     *usecase.ChangeTeamUsecase
+	asqu    *usecase.AdminStartQuestUsecase
+	rqu     *usecase.ReadyQuizUsecase
+	cau     *usecase.CheckAnswersUsecase
+	nqu     *usecase.NextQuizUsecase
+	equ     *usecase.EndQuestUsecase
+	userNum int32
 }
 
 func (ash *AdminServiceHandler) OpenEntry(ctx context.Context, r *connect.Request[emptypb.Empty], stream *connect.ServerStream[adminv1.OpenEntryResponse]) error {
@@ -38,7 +40,10 @@ func (ash *AdminServiceHandler) OpenEntry(ctx context.Context, r *connect.Reques
 					IsReady:  u.GetIsReady(),
 				})
 			}
-			return stream.Send(&adminv1.OpenEntryResponse{EnteredUsers: enteredUsers})
+			return stream.Send(&adminv1.OpenEntryResponse{
+				EnteredUsers:    enteredUsers,
+				ExpectedUserNum: ash.userNum,
+			})
 		},
 		func() { /*** DO NOTHING ***/ },
 		func(err error) error {
@@ -104,6 +109,13 @@ func (ash *AdminServiceHandler) StartQuest(ctx context.Context, r *connect.Reque
 	return nil
 }
 
+func (ash *AdminServiceHandler) ReadyQuiz(ctx context.Context, r *connect.Request[emptypb.Empty]) (*connect.Response[emptypb.Empty], error) {
+	if err := ash.rqu.Execute(); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	return connect.NewResponse(&emptypb.Empty{}), nil
+}
+
 func (ash *AdminServiceHandler) CheckAnswers(ctx context.Context, r *connect.Request[emptypb.Empty]) (*connect.Response[adminv1.CheckAnswersResponse], error) {
 	results, err := ash.cau.Execute()
 	if err != nil {
@@ -112,7 +124,8 @@ func (ash *AdminServiceHandler) CheckAnswers(ctx context.Context, r *connect.Req
 	answers := make([]*adminv1.TeamAnswer, 0, len(results))
 	for tid, res := range results {
 		answers = append(answers, &adminv1.TeamAnswer{
-			TeamId: uint32(tid),
+			TeamId:    uint32(tid),
+			TeamColor: model.TeamColor(uint32(tid)).String(),
 			Answer: &commonv1.Choice{
 				ChoiceId:   uint32(res.Answer.ChoiceID),
 				ChoiceText: res.Answer.ChoiceText,
@@ -150,6 +163,7 @@ func (ash *AdminServiceHandler) EndQuest(ctx context.Context, r *connect.Request
 		}
 		wholeStats = append(wholeStats, &adminv1.TeamStats{
 			TeamId:          uint32(tid),
+			TeamColor:       model.TeamColor(uint32(tid)).String(),
 			MembersStats:    membersStats,
 			TeamCorrectRate: stats.CorrectRate,
 			TeamOrder:       stats.TeamOrder,
@@ -168,18 +182,22 @@ func NewAdminServiceHandler(
 	ruu *usecase.RejectUserUsecase,
 	ctu *usecase.ChangeTeamUsecase,
 	asqu *usecase.AdminStartQuestUsecase,
+	rqu *usecase.ReadyQuizUsecase,
 	cau *usecase.CheckAnswersUsecase,
 	nqu *usecase.NextQuizUsecase,
 	equ *usecase.EndQuestUsecase,
+	userNum int,
 ) *AdminServiceHandler {
 	return &AdminServiceHandler{
-		oeu:  oeu,
-		ceu:  ceu,
-		ruu:  ruu,
-		ctu:  ctu,
-		asqu: asqu,
-		cau:  cau,
-		nqu:  nqu,
-		equ:  equ,
+		oeu:     oeu,
+		ceu:     ceu,
+		ruu:     ruu,
+		ctu:     ctu,
+		asqu:    asqu,
+		rqu:     rqu,
+		cau:     cau,
+		nqu:     nqu,
+		equ:     equ,
+		userNum: int32(userNum),
 	}
 }

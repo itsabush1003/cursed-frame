@@ -22,14 +22,12 @@ const getGuestClient = (getToken: () => string) => {
       const entryResponse = await entryClient.entry({ userName: userName });
       return {
         accessToken: entryResponse.accessToken,
-        reconnectKey: entryResponse.userId,
-        secret: entryResponse.secret,
+        reconnectKey: entryResponse.reconnectKey,
       };
     },
-    reconnect: async (reconnectKey: string, secret: string) => {
+    reconnect: async (reconnectKey: string) => {
       const reconnectResponse = await entryClient.reconnect({
-        userId: reconnectKey,
-        secret: secret,
+        reconnectKey: reconnectKey,
       });
       return reconnectResponse.accessToken;
     },
@@ -48,11 +46,12 @@ const getGuestClient = (getToken: () => string) => {
     isReady: async () => {
       lobbyClient.isReady({});
     },
-    getTeamId: async () => {
-      const getTeamIDResponse = await lobbyClient.getTeamID({});
+    getTeamInfo: async () => {
+      const getTeamInfoResponse = await lobbyClient.getTeamInfo({});
       return {
-        teamId: getTeamIDResponse.teamId,
-        color: getTeamIDResponse.teamName,
+        teamId: getTeamInfoResponse.teamId,
+        color: getTeamInfoResponse.teamColor,
+        members: getTeamInfoResponse.members,
       };
     },
     startQuest: questClient.startQuest,

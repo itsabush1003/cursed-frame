@@ -4,16 +4,18 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/itsuabush1003/cursed-frame/backend/golang/internal/util"
 )
 
 type ReconnectUsecase struct {
-	secret string
+	secret []byte
 	ur     IUserRepository
 }
 
-func (ru *ReconnectUsecase) Execute(userIDStr string, secret string) (token string, err error) {
-	if secret != ru.secret {
-		return "", errors.New("Invalid Acccess")
+func (ru *ReconnectUsecase) Execute(reconnectKey string) (token string, err error) {
+	userIDStr, err := util.Decrypt(reconnectKey, ru.secret)
+	if err != nil {
+		return "", err
 	}
 
 	uid, err := uuid.Parse(userIDStr)
@@ -33,7 +35,7 @@ func (ru *ReconnectUsecase) Execute(userIDStr string, secret string) (token stri
 	return user.GetAccessToken(), nil
 }
 
-func NewReconnectUsecase(secret string, ur IUserRepository) *ReconnectUsecase {
+func NewReconnectUsecase(secret []byte, ur IUserRepository) *ReconnectUsecase {
 	return &ReconnectUsecase{
 		secret: secret,
 		ur:     ur,

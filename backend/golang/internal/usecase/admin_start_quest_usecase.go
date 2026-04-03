@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"maps"
 	"slices"
 	"time"
 
@@ -25,7 +26,7 @@ func (asqu *AdminStartQuestUsecase) Execute(
 	onTick func(core.Quiz, string) error,
 	failedCallback func(error) error,
 ) error {
-	goNext, err := asqu.gm.QuestStart()
+	startCount, goNext, err := asqu.gm.QuestStart()
 	if err != nil {
 		return failedCallback(err)
 	}
@@ -34,11 +35,25 @@ func (asqu *AdminStartQuestUsecase) Execute(
 		return failedCallback(err)
 	}
 	teams := asqu.gm.GetTeams()
-	teamIDs := make([]core.TeamID, 0, len(teams))
-	for tid := range teams {
-		teamIDs = append(teamIDs, tid)
-	}
+	teamIDs := slices.Collect(maps.Keys(teams))
 	shuffledTIDs := util.ShuffleSlice(teamIDs)
+checkConnectionLoop:
+	for {
+		select {
+		case <-networkCtx.Done():
+			return failedCallback(networkCtx.Err())
+		case <-time.After(time.Second):
+			connected := asqu.gm.GetConnectedMembers()
+			// 全チーム少なくとも一人以上の接続があるか
+			if slices.Min(slices.Collect(maps.Values(connected))) > 0 {
+				break checkConnectionLoop
+			}
+		}
+	}
+	ticker := time.NewTicker(time.Second)
+	// quizLoopに入るまで止めておく
+	ticker.Stop()
+	defer ticker.Stop()
 	for _, tid := range shuffledTIDs {
 		teamUsers := teams[tid]
 		shuffledUsers := util.ShuffleSlice(teamUsers)
@@ -94,19 +109,18 @@ func (asqu *AdminStartQuestUsecase) Execute(
 			var correctChoiceID uint
 			for i, choice := range choiceCandidates {
 				quiz.Choices[i] = core.Choice{
-					Target:     uid,
-					ChoiceID:   uint(i),
+					ChoiceID:   uint(i + 1),
 					ChoiceText: choice,
 				}
 				if choice == correctProfile[0].GetAnswer() {
-					correctChoiceID = uint(i)
+					correctChoiceID = uint(i + 1)
 				}
 			}
 			var remaindTime int = core.InitialRemaindTime
-			ticker := time.NewTicker(time.Second)
-			defer ticker.Stop()
 			var onTickFailedCount int = 0
 			var hint string = ""
+			var canCountdown bool = false
+			ticker.Reset(time.Second)
 		quizLoop:
 			for {
 				select {
@@ -118,10 +132,11 @@ func (asqu *AdminStartQuestUsecase) Execute(
 					if remaindTime > 0 {
 						remaindTime += core.IncreaseTimeHintTaken
 					}
+				case <-startCount:
+					canCountdown = true
 				case <-ticker.C:
 					quiz.RemainedTime = remaindTime
 					asqu.gm.Broadcast(uid, quiz, core.Choice{
-						Target:     uid,
 						ChoiceID:   correctChoiceID,
 						ChoiceText: correctProfile[0].GetAnswer(),
 					})
@@ -133,9 +148,12 @@ func (asqu *AdminStartQuestUsecase) Execute(
 					} else {
 						onTickFailedCount = 0
 					}
-					remaindTime--
+					if canCountdown {
+						remaindTime--
+					}
 				}
 			}
+			ticker.Stop()
 		}
 	}
 

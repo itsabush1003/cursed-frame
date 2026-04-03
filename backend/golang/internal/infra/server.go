@@ -2,6 +2,7 @@ package infra
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"net"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 
 type Server struct {
 	httpServer *http.Server
+	useTLS     bool
 }
 
 func (s *Server) ListenAndServe() error {
@@ -41,7 +43,14 @@ func (s *Server) ListenAndServe() error {
 		close(connClosedNotifier)
 	}()
 
-	if err := s.httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+	listenAndServeFunc := s.httpServer.ListenAndServe
+	if s.useTLS {
+		listenAndServeFunc = func() error {
+			return s.httpServer.ListenAndServeTLS("", "")
+		}
+	}
+
+	if err := listenAndServeFunc(); !errors.Is(err, http.ErrServerClosed) {
 		close(connClosedNotifier)
 		return err
 	}
@@ -49,14 +58,23 @@ func (s *Server) ListenAndServe() error {
 	return nil
 }
 
-func NewServer(addr string, handler http.Handler) *Server {
+func NewServer(addr string, tlsConfig *tls.Config, handler http.Handler) *Server {
 	ctx, cancel := context.WithCancel(context.Background())
+	protocol := &http.Protocols{}
+	protocol.SetHTTP1(true)
+	protocol.SetUnencryptedHTTP2(true)
+	if tlsConfig != nil && (len(tlsConfig.Certificates) > 0 || tlsConfig.GetCertificate != nil) {
+		protocol.SetHTTP2(true)
+	}
 	server := &Server{
 		httpServer: &http.Server{
 			Addr:        addr,
 			Handler:     handler,
+			Protocols:   protocol,
+			TLSConfig:   tlsConfig,
 			BaseContext: func(l net.Listener) context.Context { return ctx },
 		},
+		useTLS: protocol.HTTP2(),
 	}
 	server.httpServer.RegisterOnShutdown(cancel)
 	return server

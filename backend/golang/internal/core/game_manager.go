@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"errors"
+	"maps"
 	"math"
 	"slices"
 	"sync"
@@ -35,7 +36,6 @@ func (l *lobby) Disconnect(user uuid.UUID) {
 type TeamID uint32
 
 type Choice struct {
-	Target     uuid.UUID
 	ChoiceID   uint
 	ChoiceText string
 }
@@ -62,20 +62,21 @@ const (
 )
 
 type questRoom struct {
-	teams            map[TeamID][]uuid.UUID
-	conn             map[uuid.UUID]chan<- Quiz
-	hintCh           chan string
-	answerListener   map[TeamID]chan Choice
-	answerSender     map[uuid.UUID]chan AnswerWithMap
-	nextQuizNotifier chan struct{}
-	mu               sync.RWMutex
-	ctx              context.Context
-	doneNotifier     context.CancelFunc
-	currentTarget    uuid.UUID
-	currentAnswer    Choice
-	quizCount        int
-	teamStats        map[TeamID]int
-	personalStats    map[uuid.UUID]int
+	teams              map[TeamID][]uuid.UUID
+	conn               map[uuid.UUID]chan<- Quiz
+	hintCh             chan string
+	answerListener     map[TeamID]chan Choice
+	answerSender       map[uuid.UUID]chan AnswerWithMap
+	startCountNotifier chan struct{}
+	nextQuizNotifier   chan struct{}
+	mu                 sync.RWMutex
+	ctx                context.Context
+	doneNotifier       context.CancelFunc
+	currentTarget      uuid.UUID
+	currentAnswer      Choice
+	quizCount          int
+	teamStats          map[TeamID]int
+	personalStats      map[uuid.UUID]int
 }
 
 func (qr *questRoom) SetCurrent(target uuid.UUID, answer Choice) {
@@ -83,6 +84,13 @@ func (qr *questRoom) SetCurrent(target uuid.UUID, answer Choice) {
 	defer qr.mu.Unlock()
 	qr.currentTarget = target
 	qr.currentAnswer = answer
+}
+
+func (qr *questRoom) GetConnectedUsers() []uuid.UUID {
+	qr.mu.RLock()
+	defer qr.mu.RUnlock()
+	connectedUsers := slices.Collect(maps.Keys(qr.conn))
+	return connectedUsers
 }
 
 func (qr *questRoom) PublishQuiz(quiz Quiz) {
@@ -110,7 +118,7 @@ func (qr *questRoom) CollectAnswer() (map[TeamID]Choice, map[TeamID]map[uint]int
 	qr.mu.RLock()
 	defer qr.mu.RUnlock()
 	reporters := make(map[TeamID]chan Choice, len(qr.teams))
-	for tid, _ := range qr.teams {
+	for tid := range qr.teams {
 		reporters[tid] = make(chan Choice, len(qr.teams[tid]))
 		wg.Go(func() {
 			timer := time.NewTimer(5 * time.Second)
@@ -143,6 +151,9 @@ func (qr *questRoom) CollectAnswer() (map[TeamID]Choice, map[TeamID]map[uint]int
 		wg.Go(func() {
 			res := make([]Choice, 0, len(answers))
 			choiceCounter := make(map[uint]int, MaxChoiceNum)
+			for idx := range MaxChoiceNum {
+				choiceCounter[uint(idx)+1] = 0
+			}
 			for answer := range answers {
 				res = append(res, answer)
 				choiceCounter[answer.ChoiceID]++
@@ -193,9 +204,6 @@ func (qr *questRoom) UpdateTeamStats(teamAnswers map[TeamID]Choice) {
 func (qr *questRoom) Connect(uid uuid.UUID) (context.Context, <-chan Quiz) {
 	qr.mu.Lock()
 	defer qr.mu.Unlock()
-	if qr.conn[uid] != nil {
-		close(qr.conn[uid])
-	}
 	ch := make(chan Quiz, 1)
 	qr.conn[uid] = ch
 	return qr.ctx, ch
@@ -299,7 +307,7 @@ func (gm *GameManager) SplitTeams(users []uuid.UUID, teamNum int) map[uuid.UUID]
 	userTeam := make(map[uuid.UUID]uint32, userNum)
 	maxTeamMember := int(math.Ceil(float64(userNum) / float64(teamNum)))
 	for i := range teamNum {
-		gm.room.teams[TeamID(i)] = make([]uuid.UUID, 0, maxTeamMember)
+		gm.room.teams[TeamID(i+1)] = make([]uuid.UUID, 0, maxTeamMember)
 	}
 	shuffled := util.ShuffleSlice(users)
 	for i, u := range shuffled {
@@ -323,9 +331,9 @@ func (gm *GameManager) GetTeams() map[TeamID][]uuid.UUID {
 	return teams
 }
 
-func (gm *GameManager) QuestStart() (<-chan struct{}, error) {
+func (gm *GameManager) QuestStart() (count <-chan struct{}, next <-chan struct{}, err error) {
 	if gm.state != CLOSED && gm.state != INGAME {
-		return nil, errors.New("Not quest ready or quest has already done")
+		return nil, nil, errors.New("Not quest ready or quest has already done")
 	}
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
@@ -336,7 +344,29 @@ func (gm *GameManager) QuestStart() (<-chan struct{}, error) {
 			gm.room.answerSender[uid] = make(chan AnswerWithMap)
 		}
 	}
-	return gm.room.nextQuizNotifier, nil
+	return gm.room.startCountNotifier, gm.room.nextQuizNotifier, nil
+}
+
+func (gm *GameManager) GetConnectedMembers() map[TeamID]uint {
+	if gm.state != INGAME {
+		return nil
+	}
+
+	gm.mu.Lock()
+	defer gm.mu.Unlock()
+	connectedUsers := gm.room.GetConnectedUsers()
+	teams := gm.GetTeams()
+	connectedMembers := make(map[TeamID]uint, len(teams))
+	for tid, users := range teams {
+		connectedMembers[tid] = 0
+		for _, uid := range users {
+			if slices.Contains(connectedUsers, uid) {
+				connectedMembers[tid]++
+			}
+		}
+	}
+
+	return connectedMembers
 }
 
 func (gm *GameManager) Broadcast(target uuid.UUID, quiz Quiz, correct Choice) error {
@@ -348,6 +378,18 @@ func (gm *GameManager) Broadcast(target uuid.UUID, quiz Quiz, correct Choice) er
 	gm.room.SetCurrent(target, correct)
 	gm.room.PublishQuiz(quiz)
 	return nil
+}
+
+func (gm *GameManager) StartCount() error {
+	if gm.state != INGAME {
+		return errors.New("Server is not in game mode")
+	}
+	select {
+	case gm.room.startCountNotifier <- struct{}{}:
+		return nil
+	case <-time.After(time.Second):
+		return errors.New("Timed out")
+	}
 }
 
 func (gm *GameManager) CheckHint() <-chan string {
@@ -375,8 +417,9 @@ func (gm *GameManager) DistributeAnswer(results map[TeamID]Result, answerMaps ma
 		return errors.New("Server is not in game mode")
 	}
 
+	teams := gm.GetTeams()
 	for tid, result := range results {
-		users := gm.room.teams[tid]
+		users := teams[tid]
 		for _, user := range users {
 			go func(ch chan<- AnswerWithMap, c Choice, am map[uint]int) {
 				select {
@@ -415,6 +458,7 @@ func (gm *GameManager) EndQuest() error {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
 	gm.state = RESULT
+	gm.room.doneNotifier()
 	return nil
 }
 
@@ -504,13 +548,16 @@ func (gm *GameManager) TakeHint(uid uuid.UUID, hint string) error {
 	}
 }
 
-func (gm *GameManager) Answer(uid uuid.UUID, tid TeamID, answer Choice) (AnswerWithMap, Choice, error) {
+func (gm *GameManager) Answer(uid uuid.UUID, tid TeamID, answer Choice) (AnswerWithMap, bool, error) {
 	if gm.state != INGAME {
-		return AnswerWithMap{}, Choice{}, errors.New("Game is not start or has ended")
+		return AnswerWithMap{}, false, errors.New("Game is not start or has ended")
 	}
 	teamAnswer := gm.room.Answer(tid, uid, answer)
 	gm.room.UpdatePersonalStats(uid, answer)
-	return teamAnswer, gm.room.currentAnswer, nil
+	if teamAnswer.TeamAnswer.ChoiceID == 0 {
+		return teamAnswer, false, errors.New("team's answer cannot received.")
+	}
+	return teamAnswer, teamAnswer.TeamAnswer.ChoiceID == gm.room.currentAnswer.ChoiceID, nil
 }
 
 func (gm *GameManager) GetResultStats(uid uuid.UUID, tid TeamID) (total float32, ps Stats, ts Stats, err error) {
@@ -561,18 +608,19 @@ func NewGameManager(maxUserNum int, teamNum int) *GameManager {
 				doneNotifier: lobbyDone,
 			},
 			room: &questRoom{
-				teams:            make(map[TeamID][]uuid.UUID, teamNum),
-				conn:             make(map[uuid.UUID]chan<- Quiz, maxUserNum),
-				hintCh:           make(chan string),
-				answerListener:   make(map[TeamID]chan Choice, teamNum),
-				answerSender:     make(map[uuid.UUID]chan AnswerWithMap, maxUserNum),
-				nextQuizNotifier: make(chan struct{}),
-				mu:               sync.RWMutex{},
-				ctx:              roomCtx,
-				doneNotifier:     roomDone,
-				quizCount:        0,
-				teamStats:        make(map[TeamID]int, teamNum),
-				personalStats:    make(map[uuid.UUID]int, maxUserNum),
+				teams:              make(map[TeamID][]uuid.UUID, teamNum),
+				conn:               make(map[uuid.UUID]chan<- Quiz, maxUserNum),
+				hintCh:             make(chan string),
+				answerListener:     make(map[TeamID]chan Choice, teamNum),
+				answerSender:       make(map[uuid.UUID]chan AnswerWithMap, maxUserNum),
+				startCountNotifier: make(chan struct{}),
+				nextQuizNotifier:   make(chan struct{}),
+				mu:                 sync.RWMutex{},
+				ctx:                roomCtx,
+				doneNotifier:       roomDone,
+				quizCount:          0,
+				teamStats:          make(map[TeamID]int, teamNum),
+				personalStats:      make(map[uuid.UUID]int, maxUserNum),
 			},
 		}
 	})()
