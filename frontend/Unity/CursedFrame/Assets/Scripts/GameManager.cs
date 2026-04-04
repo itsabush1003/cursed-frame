@@ -140,7 +140,7 @@ public class GameManager : MonoBehaviour
     /// <param name="callback">アニメーション終了時に呼ばれるコールバック関数</param>
     public void StartAttackAnimation(bool[] isCorrects, Action callback = null)
     {
-        magiciansController.StartAttackAnimation(liaison?.GetTeamId() ?? debugTeamId, currentTargetTeamId, enemyObject.transform.position + Vector3.right, isCorrects);
+        magiciansController.StartAttackAnimation(liaison?.GetTeamId() ?? debugTeamId, currentTargetTeamId, enemyObject.transform.position + Vector3.right, isCorrects, callback);
     }
 
     /// <summary>
