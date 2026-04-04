@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -18,6 +19,7 @@ import { UserStatusContext } from "@/context/user-status-context.ts";
 import QuizPage from "@/pages/quiz-page.tsx";
 import ResultPage from "@/pages/result-page.tsx";
 import TitlePage from "@/pages/title-page.tsx";
+import getUnityService from "@/services/unity/unity-service";
 
 const EntryPage = lazy(() => import("@/pages/entry-page.tsx"));
 const LobbyViewerPage = lazy(() => import("@/pages/lobby-viewer-page.tsx"));
@@ -37,31 +39,47 @@ type GameState = (typeof GameState)[keyof typeof GameState];
 const unityWebglFileName = import.meta.env.VITE_UNITY_WEBGL_NAME;
 
 function App() {
-  const { unityProvider, loadingProgression, isLoaded, sendMessage } =
-    useUnityContext({
-      loaderUrl: "webgl/" + unityWebglFileName + ".loader.js",
-      dataUrl: "webgl/" + unityWebglFileName + ".data.gz",
-      frameworkUrl: "webgl/" + unityWebglFileName + ".framework.js.gz",
-      codeUrl: "webgl/" + unityWebglFileName + ".wasm.gz",
-    });
+  const {
+    unityProvider,
+    loadingProgression,
+    isLoaded,
+    sendMessage,
+    addEventListener,
+    removeEventListener,
+  } = useUnityContext({
+    loaderUrl: "webgl/" + unityWebglFileName + ".loader.js",
+    dataUrl: "webgl/" + unityWebglFileName + ".data.gz",
+    frameworkUrl: "webgl/" + unityWebglFileName + ".framework.js.gz",
+    codeUrl: "webgl/" + unityWebglFileName + ".wasm.gz",
+  });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isPermitAudioModalVisible, setIsPermitAudioModalVisible] =
     useState<boolean>(true);
   const [isAudioEnable, setAudioEnable] = useState<boolean>(false);
   const [isSplashEnd, setIsSplashEnd] = useState<boolean>(false);
+  const [isSceneReady, setIsSceneReady] = useState<boolean>(false);
   const [currentState, setCurrentState] = useState<GameState>(
     GameState.Prepare,
   );
   const { userStatus } = useContext(UserStatusContext);
+  const unityService = useMemo(
+    () => getUnityService(sendMessage, addEventListener, removeEventListener),
+    [sendMessage, addEventListener, removeEventListener],
+  );
 
   if (
     isLoaded &&
     isSplashEnd &&
     !isPermitAudioModalVisible &&
     currentState === GameState.Prepare
-  )
+  ) {
+    unityService.toUnity.SetAudioEnable(isAudioEnable);
+    unityService.toUnity.SetCameraProjection(
+      userStatus.type === "admin" ? "Landscape" : "Portlate",
+    );
     setCurrentState(GameState.Title);
+  }
   const calcCanvasSize = useCallback(() => {
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -76,7 +94,6 @@ function App() {
   const targetCanvasSize = calcCanvasSize();
 
   useEffect(() => {
-    if (isLoaded) setTimeout(() => setIsSplashEnd(true), 1000);
     const adjustCanvas = () => {
       if (canvasRef.current) {
         const { w, h } = calcCanvasSize();
@@ -86,12 +103,18 @@ function App() {
     };
     adjustCanvas();
     window.addEventListener("resize", adjustCanvas);
-    return () => window.removeEventListener("resize", adjustCanvas);
-  }, [isLoaded, calcCanvasSize]);
-
-  useEffect(() => {
-    sendMessage("Director", "SetAudio", Number(isAudioEnable));
-  }, [isAudioEnable]);
+    const cleanSplashEvent = unityService.fromUnity.RegistSplashDone(() =>
+      setIsSplashEnd(true),
+    );
+    const cleanSceneReadyEvent = unityService.fromUnity.RegistQuestSceneReady(
+      () => setIsSceneReady(true),
+    );
+    return () => {
+      window.removeEventListener("resize", adjustCanvas);
+      cleanSplashEvent();
+      cleanSceneReadyEvent();
+    };
+  }, [isLoaded, calcCanvasSize, unityService]);
 
   return (
     <>
@@ -140,10 +163,22 @@ function App() {
               <Suspense fallback={<LoadingMark />}>
                 {userStatus.type === "admin" ? (
                   <LobbyViewerPage
-                    toNext={() => setCurrentState(GameState.Quiz)}
+                    toNext={(teamNum: number) => {
+                      unityService.toUnity.SetAccessToken(userStatus.token);
+                      unityService.toUnity.StartQuest(
+                        userStatus.teamId,
+                        teamNum,
+                      );
+                      setCurrentState(GameState.Quiz);
+                    }}
                   />
                 ) : (
-                  <EntryPage toNext={() => setCurrentState(GameState.Ready)} />
+                  <EntryPage
+                    toNext={() => {
+                      unityService.toUnity.SetAccessToken(userStatus.token);
+                      setCurrentState(GameState.Ready);
+                    }}
+                  />
                 )}
               </Suspense>
             )}
@@ -151,17 +186,25 @@ function App() {
               (userStatus.type === "admin" ? (
                 <></>
               ) : (
-                <Suspense
-                  fallback={
-                    <div style={{ color: "white" }}>Now Loading...</div>
-                  }
-                >
-                  <ProfilePage toNext={() => setCurrentState(GameState.Quiz)} />
+                <Suspense fallback={<LoadingMark />}>
+                  <ProfilePage
+                    toNext={() => {
+                      unityService.toUnity.StartQuest(userStatus.teamId, 9);
+                      setCurrentState(GameState.Quiz);
+                    }}
+                  />
                 </Suspense>
               ))}
             {currentState === GameState.Quiz && (
               <Suspense fallback={<LoadingMark />}>
-                <QuizPage toNext={() => setCurrentState(GameState.Result)} />
+                <QuizPage
+                  toNext={() => setCurrentState(GameState.Result)}
+                  isSceneReady={isSceneReady}
+                  eventController={{
+                    eventSender: unityService.toUnity,
+                    registEventReceiver: unityService.fromUnity,
+                  }}
+                />
               </Suspense>
             )}
             {currentState === GameState.Result && <ResultPage />}

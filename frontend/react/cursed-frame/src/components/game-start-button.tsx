@@ -4,7 +4,11 @@ import { css } from "@emotion/react";
 
 import { UserStatusContext } from "@/context/user-status-context";
 
-const GameStartButton = ({ onStartButton }: { onStartButton: () => void }) => {
+const GameStartButton = ({
+  onStartButton,
+}: {
+  onStartButton: () => Promise<void>;
+}) => {
   const { userStatus } = useContext(UserStatusContext);
 
   return (
