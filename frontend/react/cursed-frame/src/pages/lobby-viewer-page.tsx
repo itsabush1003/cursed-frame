@@ -9,7 +9,7 @@ import getAdminClient from "@/services/rpc/admin-client";
 
 import type { OpenEntryResponse } from "@/gen/admin/v1/admin_pb";
 
-const LobbyViewerPage = ({ toNext }: { toNext: () => void }) => {
+const LobbyViewerPage = ({ toNext }: { toNext: (teamNum: number) => void }) => {
   const { userStatus } = useContext(UserStatusContext);
   const [entryUsersData, setEntryUsersData] = useState<rowData[]>([]);
   const [isExpectedNumEntered, setIsExpectedNumEntered] =
@@ -24,31 +24,31 @@ const LobbyViewerPage = ({ toNext }: { toNext: () => void }) => {
   );
   const reflectLobbyStatus = useCallback(
     (res: OpenEntryResponse) => {
-    const rowDataList: rowData[] = [];
-    for (const userData of res.enteredUsers) {
-      const rowData = {
-        userName: userData.userName,
-        teamId: userData.teamId,
-        isReady: userData.isReady,
-        reject: () => {
-          adminClient.rejectUser({ userId: userData.userId });
-        },
-      };
-      rowDataList.push(rowData);
-    }
-    setEntryUsersData((prev) => {
-      if (prev.length !== rowDataList.length) return rowDataList;
-      const checkProps: (keyof rowData)[] = ["userName", "teamId", "isReady"];
-      if (
-        prev.every((data, i) =>
-          checkProps.every((prop) => data[prop] === rowDataList[i][prop]),
+      const rowDataList: rowData[] = [];
+      for (const userData of res.enteredUsers) {
+        const rowData = {
+          userName: userData.userName,
+          teamId: userData.teamId,
+          isReady: userData.isReady,
+          reject: () => {
+            adminClient.rejectUser({ userId: userData.userId });
+          },
+        };
+        rowDataList.push(rowData);
+      }
+      setEntryUsersData((prev) => {
+        if (prev.length !== rowDataList.length) return rowDataList;
+        const checkProps: (keyof rowData)[] = ["userName", "teamId", "isReady"];
+        if (
+          prev.every((data, i) =>
+            checkProps.every((prop) => data[prop] === rowDataList[i][prop]),
+          )
         )
-      )
-        return prev;
-      else return rowDataList;
-    });
-    if (rowDataList.length >= res.expectedUserNum)
-      setIsExpectedNumEntered(true);
+          return prev;
+        else return rowDataList;
+      });
+      if (rowDataList.length >= res.expectedUserNum)
+        setIsExpectedNumEntered(true);
     },
     [adminClient],
   );
@@ -75,7 +75,13 @@ const LobbyViewerPage = ({ toNext }: { toNext: () => void }) => {
         </button>
       ) : (
         <div>
-          <button onClick={toNext}>ゲームを始める</button>
+          <button
+            onClick={() =>
+              toNext(Math.max(...entryUsersData.map((user) => user.teamId)))
+            }
+          >
+            ゲームを始める
+          </button>
         </div>
       )}
     </div>
