@@ -1,6 +1,7 @@
 name: Build Golang
 
 on:
+  workflow_call: {}
   workflow_dispatch: {}
 
 jobs:

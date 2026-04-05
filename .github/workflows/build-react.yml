@@ -1,6 +1,11 @@
 name: Build React
 
 on:
+  workflow_call:
+    outputs:
+      build-path:
+        description: "Path to React build artifacts"
+        value: ${{ jobs.build.outputs.build-path }}
   workflow_dispatch: {}
 
 jobs:
