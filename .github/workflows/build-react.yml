@@ -1,0 +1,40 @@
+name: Build React
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      build-path: ${{ steps.build.outputs.path }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: frontend/react/cursed-frame
+
+      - name: Build React
+        id: build
+        run: |
+          bun run build
+          echo "path=frontend/react/cursed-frame/dist" >> $GITHUB_OUTPUT
+        working-directory: ./frontend/react/cursed-frame
+
+      - name: Cache React build
+        uses: actions/cache@v3
+        with:
+          path: frontend/react/cursed-frame/dist
+          key: react-build-${{ hashFiles('frontend/react/cursed-frame/**') }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-build
+          path: frontend/react/cursed-frame/dist
+          retention-days: 1
