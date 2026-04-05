@@ -113,22 +113,30 @@ public class MagiciansController : MonoBehaviour
     /// </summary>
     /// <param name="teamId">アニメーションを適用するチームのID</param>
     /// <param name="unAttackTeamId">攻撃できないチームのID</param>
-    /// <param name="target">攻撃を当てるターゲットのワールド座標</param>
-    /// <param name="isSuccesses">攻撃が成功するかどうかが入った配列　teamId==0の時はチーム数分、1<teamId<teamNumの時は一つだけ</param>
-    public void StartAttackAnimation(int teamId, int unAttackTeamId, Vector3 target, bool[] isSuccesses)
+    /// <param name="targetPosition">攻撃を当てるターゲットのワールド座標</param>
+    /// <param name="isSuccesses">攻撃が成功するかどうかが入った配列　teamId==0の時はチーム数分、1<=teamId<=teamNumの時は一つだけ</param>
+    /// <param name="callback">アニメーション終了時に呼ばれるコールバック関数</param>
+    public void StartAttackAnimation(int teamId, int unAttackTeamId, Vector3 targetPosition, bool[] isSuccesses, System.Action callback = null)
     {
+        Sequence sequence = DOTween.Sequence();
         if (teamId == 0)
         {
             for (var i = 0; i < bullets.Length; i++)
             {
                 if (i+1 == unAttackTeamId) continue;
-                SetupBulletAnimation(bullets[i], isSuccesses[i] ? target : transform.position);
+                sequence.Join(SetupBulletAnimation(bullets[i], isSuccesses[i] ? targetPosition : transform.position));
             }
         }
         else if (0 < teamId && teamId <= MAX_CHARA_NUM && teamId != unAttackTeamId)
         {
-            SetupBulletAnimation(bullets[teamId-1], isSuccesses[0] ? target : transform.position);
+            sequence.Append(SetupBulletAnimation(bullets[teamId-1], isSuccesses[0] ? targetPosition : transform.position));
         }
+        else
+        {
+            // 攻撃できないチームも他のチームとcallbackの実行タイミングを合わせる
+            sequence.AppendInterval(4.0f);
+        }
+        sequence.OnComplete(() => callback?.Invoke());
     }
 
     /// <summary>
@@ -163,17 +171,18 @@ public class MagiciansController : MonoBehaviour
     /// </summary>
     /// <param name="bullet">bulletのGameObject</param>
     /// <param name="target">bulletを当てるワールド座標</param>
-    private void SetupBulletAnimation(GameObject bullet, Vector3 target)
+    /// <returns>bulletのアニメーションのSequence</returns>
+    private Sequence SetupBulletAnimation(GameObject bullet, Vector3 target)
     {
         Vector3 originalPosition = bullet.transform.position;
         Vector3 originalScale = bullet.transform.localScale;
         Renderer energyRenderer = bullet.transform.Find("Energy").gameObject.GetComponent<Renderer>();
         Color originalColor = GetColorWithPB(energyRenderer);
         bullet.SetActive(true);
-        DOTween.Sequence()
+        return DOTween.Sequence()
             .AppendInterval(1.0f)
             .Append(bullet.transform.DOMove(target, 2.0f))
-            .Append(DOTween.To(() => originalColor.a, x => SetColorWithPB(energyRenderer, new Color(originalColor.r,originalColor.g,originalColor.b,x)), 0.0f, 1.0f).SetEase(Ease.OutExpo))
+            .Append(DOTween.To(() => originalColor.a, x => SetColorWithPB(energyRenderer, new Color(originalColor.r, originalColor.g, originalColor.b, x)), 0.0f, 1.0f).SetEase(Ease.OutExpo))
             // .Append(energyRenderer.materal.DOFade(0.0f, "_TintColor", 1.0f).SetEase(Ease.OutExpo))
             .Join(bullet.transform.DOScale(new Vector3(2.0f, 2.0f, 1.0f), 1.0f).SetEase(Ease.OutExpo))
             .OnComplete(() =>
