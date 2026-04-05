@@ -1,0 +1,81 @@
+name: Build Unity WebGL
+
+on:
+  workflow_call:
+    secrets:
+      UNITY_EMAIL:
+        required: true
+      UNITY_LICENSE:
+        required: true
+      UNITY_PASSWORD:
+        required: true
+    outputs:
+      build-path:
+        description: "Path to Unity build artifacts"
+        value: ${{ jobs.build.outputs.build-path }}
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    name: Build unity project
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      # Cache
+      - uses: actions/cache@v3
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+
+      # Test
+      - name: Run tests
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          projectPath: frontend/Unity/CursedFrame
+
+      # Check and Clean
+      - name: Check and Clean
+        run: |
+          git diff
+          git restore frontend/Unity/CursedFrame/Packages/*.json
+          git clean -fd frontend/Unity/CursedFrame/Packages
+
+      # Build
+      - name: Build project
+        uses: game-ci/unity-builder@v4
+        id: build
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: WebGL
+          projectPath: frontend/Unity/CursedFrame
+          buildsPath: frontend/Unity/build
+          buildName: cursed_frame_webgl
+
+      # Cache
+      - name: Cache Unity build
+        uses: actions/cache@v3
+        with:
+          path: frontend/unity/Build/WebGL
+          key: unity-build-${{ hashFiles('frontend/unity/CursedFrame/**') }}
+
+      # Output
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unity-build
+          path: frontend/Unity/build
+          retention-days: 1

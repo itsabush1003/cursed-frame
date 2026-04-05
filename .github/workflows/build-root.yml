@@ -1,0 +1,145 @@
+name: Build All and Release
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 変更されたファイルを検知
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      react-changed: ${{ steps.changes.outputs.react }}
+      unity-changed: ${{ steps.changes.outputs.unity }}
+      golang-changed: ${{ steps.changes.outputs.golang }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect file changes
+        id: changes
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "react=true" >> $GITHUB_OUTPUT
+            echo "unity=true" >> $GITHUB_OUTPUT
+            echo "golang=true" >> $GITHUB_OUTPUT
+          else
+            # 前のコミットとの差分を検知
+            git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed_files.txt
+            
+            echo "react=$(grep -q 'frontend/react/cursed-frame/' changed_files.txt && echo true || echo false)" >> $GITHUB_OUTPUT
+            echo "unity=$(grep -q 'frontend/Unity/CursedFrame/' changed_files.txt && echo true || echo false)" >> $GITHUB_OUTPUT
+            echo "golang=$(grep -q 'backend/golang/' changed_files.txt && echo true || echo false)" >> $GITHUB_OUTPUT
+            
+            cat changed_files.txt
+          fi
+
+  # React のビルド（React ファイルが変更された場合のみ）
+  build-react:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.react-changed == 'true'
+    uses: ./.github/workflows/build-react.yml
+
+  # Unity のビルド（Unity ファイルが変更された場合のみ）
+  build-unity:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.unity-changed == 'true'
+    uses: ./.github/workflows/build-unity.yml
+    secrets:
+      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+
+  # React/Unity が変更されていない場合、キャッシュから復元
+  restore-react-cache:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.react-changed == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore React artifact from cache
+        uses: actions/cache@v3
+        with:
+          path: react-build
+          key: react-build-${{ hashFiles('frontend/react/cursed-frame/**') }}
+          restore-keys: react-build-
+
+      - name: Upload restored React artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-build
+          path: react-build
+          retention-days: 1
+
+  restore-unity-cache:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.unity-changed == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore Unity artifact from cache
+        uses: actions/cache@v3
+        with:
+          path: unity-build
+          key: unity-build-${{ hashFiles('frontend/Unity/CursedFrame/**') }}
+          restore-keys: unity-build-
+
+      - name: Upload restored Unity artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-build
+          path: unity-build
+          retention-days: 1
+
+  # Golang のビルド（React か Unity が変更された場合、または Golang ファイルが変更された場合）
+  build-golang:
+    needs:
+      [
+        detect-changes,
+        build-react,
+        build-unity,
+        restore-react-cache,
+        restore-unity-cache,
+      ]
+    if: |
+      always() &&
+      (needs.detect-changes.outputs.golang-changed == 'true' || 
+       needs.detect-changes.outputs.react-changed == 'true' || 
+       needs.detect-changes.outputs.unity-changed == 'true')
+    uses: ./.github/workflows/build-golang.yml
+
+  # Release への追加
+  release:
+    needs: build-golang
+    runs-on: ubuntu-latest
+    if: |
+      always() &&
+      startsWith(github.ref, 'refs/tags/') &&
+      needs.build-golang.result == 'success'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download final build
+        uses: actions/download-artifact@v4
+        with:
+          name: final-build
+          path: ./release-files
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-files/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
