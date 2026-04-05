@@ -1,0 +1,75 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    # disable version update
+    open-pull-requests-limit: 0
+    commit-message:
+      prefix: "deps(ci):"
+    groups:
+      actions:
+        patterns:
+          - "*"
+        applies-to: "security-updates"
+  - package-ecosystem: "gomod"
+    directory: "/backend/golang/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "deps(go):"
+    cooldown:
+      default-days: 7
+    groups:
+      golang:
+        patterns:
+          - "*"
+        applies-to: "version-updates"
+        update-types:
+          - "minor"
+          - "patch"
+      go-security:
+        patterns:
+          - "*"
+        applies-to: "security-updates"
+        update-types:
+          - "minor"
+          - "patch"
+    allow:
+      - dependency-type: "direct"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-patch"
+  - package-ecosystem: "bun"
+    directory: "/frontend/react/cursed-frame"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "deps(bun):"
+    cooldown:
+      default-days: 7
+    groups:
+      bun:
+        patterns:
+          - "*"
+        applies-to: "version-updates"
+        update-types:
+          - "minor"
+          - "patch"
+      bun-security:
+        patterns:
+          - "*"
+        applies-to: "security-updates"
+        update-types:
+          - "minor"
+          - "patch"
+    allow:
+      - dependency-type: "direct"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-patch"
