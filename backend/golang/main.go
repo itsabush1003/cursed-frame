@@ -153,7 +153,11 @@ func main() {
 	router := infra.NewRouter(fileHandler, imageHandler, entryServiceHandler, lobbyServiceHandler, questServiceHandler, adminServiceHandler, adminCheckMiddleware, authorizeMiddleware, rateLimitMiddleware, corsMiddleware)
 
 	server := infra.NewServer(":8888", tlsConfig, router)
-	println(fmt.Sprintf("Server started at :8888%s\n\tguest: %s", router.AdminPath, router.GuestPath))
+	domain_str := domain
+	if domain_str == "" {
+		domain_str = "<your_domain>"
+	}
+	println(fmt.Sprintf("Server started at\n\tadmin: %s:8888%s\n\tguest: %s:8888%s", domain_str, router.AdminPath, domain_str, router.GuestPath))
 	if err = server.ListenAndServe(); err != nil {
 		panic(err)
 	}
