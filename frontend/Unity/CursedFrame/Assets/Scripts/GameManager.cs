@@ -111,7 +111,8 @@ public class GameManager : MonoBehaviour
         enemyObject.transform.DOPause();
         Transform originalPosition = enemyObject.transform;
         Sequence sequence = DOTween.Sequence()
-            .Append(enemyObject.transform.DOShakeRotation(1.0f, new Vector3(5.0f, 5.0f, 30.0f), 10, 90.0f));
+            .Append(enemyObject.transform.DOShakeRotation(1.0f, new Vector3(5.0f, 5.0f, 30.0f), 10, 90.0f))
+            .Join(profileImageMaterial.DOColor(Color.black, "_Color", 1.0f));
         if (currentTargetTeamId == myTeamId)
         {
             sequence.Join(cameraController.ReleaseAnimation());
