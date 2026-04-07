@@ -1,4 +1,9 @@
 name: Build Unity WebGL
+env:
+  BUILD_TARGET: WebGL
+  BUILD_DIR: frontend/Unity/build
+  BUILD_NAME: cursed_frame_webgl
+  PROJECT_PATH: frontend/Unity/CursedFrame
 
 on:
   workflow_call:
@@ -29,7 +34,7 @@ jobs:
       # Cache
       - uses: actions/cache@v3
         with:
-          path: Library
+          path: ${{ env.PROJECT_PATH }}/Library
           key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: |
             Library-
@@ -43,14 +48,14 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          projectPath: frontend/Unity/CursedFrame
+          projectPath: ${{ env.PROJECT_PATH }}
 
       # Check and Clean
       - name: Check and Clean
         run: |
           git diff
-          git restore frontend/Unity/CursedFrame/Packages/*.json
-          git clean -fd frontend/Unity/CursedFrame/Packages
+          git restore $PROJECT_PATH/Packages/*.json
+          git clean -fd $PROJECT_PATH/Packages
 
       # Build
       - name: Build project
@@ -61,21 +66,21 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          targetPlatform: WebGL
-          projectPath: frontend/Unity/CursedFrame
-          buildsPath: frontend/Unity/build
-          buildName: cursed_frame_webgl
+          targetPlatform: ${{ env.BUILD_TARGET }}
+          projectPath: ${{ env.PROJECT_PATH }}
+          buildsPath: ${{ env.BUILD_DIR }}
+          buildName: ${{ env.BUILD_NAME }}
 
       # Cache
       - name: Cache Unity build
         uses: actions/cache@v3
         with:
-          path: frontend/unity/Build/WebGL
-          key: unity-build-${{ hashFiles('frontend/unity/CursedFrame/**') }}
+          path: ${{ env.BUILD_DIR }}/${{ env.BUILD_TARGET }}/${{ env.BUILD_NAME }}/Build
+          key: unity-build-${{ hashFiles(format('{0}/**', env.PROJECT_PATH)) }}
 
       # Output
       - uses: actions/upload-artifact@v4
         with:
           name: unity-build
-          path: frontend/Unity/build
+          path: ${{ env.BUILD_DIR }}/${{ env.BUILD_TARGET }}/${{ env.BUILD_NAME }}/Build
           retention-days: 1
