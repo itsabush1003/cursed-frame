@@ -20,6 +20,17 @@ At the time, I loved the quiz game that the company was releasing. The game feat
 Unfortunately, this project never materialized at the time. I simply lacked all the necessary resources, including time and my own technical skills.
 Even so, I felt it would be a shame to abandon this project. The gears were simply clicking into place in my mind. So I decided to pursue this project as a personal project.
 
+## Features
+
+- The format of a browser game that is easy to participate in
+  - Regardless of the type or specifications of your device, a certain degree of consistent operation can be guaranteed, and there's no need for the troublesome process of installing unofficial apps.
+- Creating quizzes based on information provided by the users themselves
+  - By actually conducting a survey with participants and using their responses as quiz options, we anticipate not only gaining personal information, but also fostering a sense of camaraderie from having answered the same survey, stimulating interest in options other than the correct answer, and increasing immersion through improved connectivity between the in-game world and the real world.
+- Separation of the overall screen from individual screens
+  - By utilizing the host-guest communication relationship, the overall information is displayed on the host's screen, and individual information is displayed on the guest's screen, eliminating the need to cram a large amount of information onto the guest's small screen.
+- Competition and cooperation between teams
+  - The overall goal was to create a system that emphasizes collaboration among all teams through a narrative, while also fostering a sense of competition by visualizing the contributions of individuals and each team.
+
 ## Tech Stacks
 
 | Category | Technology                                    |
