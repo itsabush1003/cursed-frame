@@ -70,7 +70,7 @@ jobs:
       - name: Restore React artifact from cache
         uses: actions/cache@v3
         with:
-          path: react-build
+          path: frontend/react/cursed-frame/dist
           key: react-build-${{ hashFiles('frontend/react/cursed-frame/**') }}
           restore-keys: react-build-
 
@@ -78,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: react-build
-          path: react-build
+          path: frontend/react/cursed-frame/dist
           retention-days: 1
 
   restore-unity-cache:
@@ -89,7 +89,7 @@ jobs:
       - name: Restore Unity artifact from cache
         uses: actions/cache@v3
         with:
-          path: unity-build
+          path: frontend/Unity/build/WebGL/cursed_frame_webgl/Build
           key: unity-build-${{ hashFiles('frontend/Unity/CursedFrame/**') }}
           restore-keys: unity-build-
 
@@ -97,7 +97,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unity-build
-          path: unity-build
+          path: frontend/Unity/build/WebGL/cursed_frame_webgl/Build
           retention-days: 1
 
   # Golang のビルド（React か Unity が変更された場合、または Golang ファイルが変更された場合）
