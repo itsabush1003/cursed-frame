@@ -69,14 +69,12 @@ func main() {
 		panic(err)
 	}
 	defer os.RemoveAll(imageDirname)
-	println(imageDirname)
 
 	dbDirname, err := os.MkdirTemp("", "db")
 	if err != nil {
 		panic(err)
 	}
 	defer os.RemoveAll(dbDirname)
-	println(dbDirname)
 
 	tlsConfig := &tls.Config{
 		MinVersion: tls.VersionTLS12,
