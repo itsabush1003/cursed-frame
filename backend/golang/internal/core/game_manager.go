@@ -408,6 +408,10 @@ func (gm *GameManager) CheckHint() <-chan string {
 	return gm.room.hintCh
 }
 
+func (gm *GameManager) GetCurrentAnswer() Choice {
+	return gm.room.currentAnswer
+}
+
 func (gm *GameManager) CollectAnswer() (map[TeamID]Result, map[TeamID]map[uint]int, error) {
 	if gm.state != INGAME {
 		return nil, nil, errors.New("Server is not in game mode")
@@ -418,7 +422,7 @@ func (gm *GameManager) CollectAnswer() (map[TeamID]Result, map[TeamID]map[uint]i
 	for tid, choice := range teamAnswers {
 		results[tid] = Result{
 			Answer:    choice,
-			IsCorrect: choice == gm.room.currentAnswer,
+			IsCorrect: choice == gm.GetCurrentAnswer(),
 		}
 	}
 	return results, teamAnswersMap, nil
@@ -572,7 +576,7 @@ func (gm *GameManager) Answer(uid uuid.UUID, tid TeamID, answer Choice) (AnswerW
 	if teamAnswer.TeamAnswer.ChoiceID == 0 {
 		return teamAnswer, false, errors.New("team's answer cannot received.")
 	}
-	return teamAnswer, teamAnswer.TeamAnswer.ChoiceID == gm.room.currentAnswer.ChoiceID, nil
+	return teamAnswer, teamAnswer.TeamAnswer.ChoiceID == gm.GetCurrentAnswer().ChoiceID, nil
 }
 
 func (gm *GameManager) GetResultStats(uid uuid.UUID, tid TeamID) (total float32, ps Stats, ts Stats, err error) {

@@ -117,7 +117,7 @@ func (ash *AdminServiceHandler) ReadyQuiz(ctx context.Context, r *connect.Reques
 }
 
 func (ash *AdminServiceHandler) CheckAnswers(ctx context.Context, r *connect.Request[emptypb.Empty]) (*connect.Response[adminv1.CheckAnswersResponse], error) {
-	results, err := ash.cau.Execute()
+	results, correct, err := ash.cau.Execute()
 	if err != nil {
 		return nil, connect.NewError(connect.CodeUnimplemented, err)
 	}
@@ -135,6 +135,10 @@ func (ash *AdminServiceHandler) CheckAnswers(ctx context.Context, r *connect.Req
 	}
 	return connect.NewResponse(&adminv1.CheckAnswersResponse{
 		Answers: answers,
+		CorrectChoice: &commonv1.Choice{
+			ChoiceId:   uint32(correct.ChoiceID),
+			ChoiceText: correct.ChoiceText,
+		},
 	}), nil
 }
 

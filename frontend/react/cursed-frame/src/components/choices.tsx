@@ -56,8 +56,10 @@ export const Choices = ({
     pointer-events: auto;
 
     &:has(input[type="radio"]:checked) {
-      border-width: 3px;
-      border-color: ${userStatus.color.toLowerCase()};
+      border-width: ${userStatus.type === "admin" ? "6px" : "3px"};
+      border-color: ${userStatus.type === "admin"
+        ? "var(--main-color-2)"
+        : userStatus.color.toLowerCase()};
     }
 
     ${userStatus.type === "admin" &&
