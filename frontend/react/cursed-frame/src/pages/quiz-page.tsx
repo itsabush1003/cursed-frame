@@ -103,6 +103,12 @@ const QuizPage = ({
       );
       setAnswerMap(answers);
       setResults(response.answers.map((answer) => answer.isCorrect));
+      if (response.correctChoice) {
+        choiceRef.current?.setSelected({
+          id: response.correctChoice.choiceId,
+          text: response.correctChoice.choiceText,
+        });
+      }
     } else if ("answer" in client) {
       // guestの場合
       let selectedChoice = choiceRef.current?.getSelected();
@@ -343,7 +349,7 @@ const maskStyle = css`
   height: 100%;
   border: none;
   border-radius: 6px;
-  background-color: rgba(64, 64, 64, 0.8);
+  background-color: rgba(64, 64, 64, 0.6);
   align-content: center;
   justify-content: center;
   z-index: 100;

@@ -454,6 +454,7 @@ func (x *TeamAnswer) GetIsCorrect() bool {
 type CheckAnswersResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Answers       []*TeamAnswer          `protobuf:"bytes,1,rep,name=answers,proto3" json:"answers,omitempty"`
+	CorrectChoice *v1.Choice             `protobuf:"bytes,2,opt,name=correct_choice,json=correctChoice,proto3" json:"correct_choice,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -491,6 +492,13 @@ func (*CheckAnswersResponse) Descriptor() ([]byte, []int) {
 func (x *CheckAnswersResponse) GetAnswers() []*TeamAnswer {
 	if x != nil {
 		return x.Answers
+	}
+	return nil
+}
+
+func (x *CheckAnswersResponse) GetCorrectChoice() *v1.Choice {
+	if x != nil {
+		return x.CorrectChoice
 	}
 	return nil
 }
@@ -720,9 +728,10 @@ const file_admin_v1_admin_proto_rawDesc = "" +
 	"team_color\x18\x04 \x01(\tR\tteamColor\x12)\n" +
 	"\x06answer\x18\x02 \x01(\v2\x11.common.v1.ChoiceR\x06answer\x12\x1d\n" +
 	"\n" +
-	"is_correct\x18\x03 \x01(\bR\tisCorrect\"F\n" +
+	"is_correct\x18\x03 \x01(\bR\tisCorrect\"\x80\x01\n" +
 	"\x14CheckAnswersResponse\x12.\n" +
-	"\aanswers\x18\x01 \x03(\v2\x14.admin.v1.TeamAnswerR\aanswers\"r\n" +
+	"\aanswers\x18\x01 \x03(\v2\x14.admin.v1.TeamAnswerR\aanswers\x128\n" +
+	"\x0ecorrect_choice\x18\x02 \x01(\v2\x11.common.v1.ChoiceR\rcorrectChoice\"r\n" +
 	"\tUserStats\x12\x1b\n" +
 	"\tuser_name\x18\x01 \x01(\tR\buserName\x12!\n" +
 	"\fcorrect_rate\x18\x02 \x01(\x02R\vcorrectRate\x12%\n" +
@@ -788,34 +797,35 @@ var file_admin_v1_admin_proto_depIdxs = []int32{
 	11, // 1: admin.v1.StartQuestResponse.choices:type_name -> common.v1.Choice
 	11, // 2: admin.v1.TeamAnswer.answer:type_name -> common.v1.Choice
 	6,  // 3: admin.v1.CheckAnswersResponse.answers:type_name -> admin.v1.TeamAnswer
-	8,  // 4: admin.v1.TeamStats.members_stats:type_name -> admin.v1.UserStats
-	12, // 5: admin.v1.EndQuestResponse.result:type_name -> common.v1.Result
-	9,  // 6: admin.v1.EndQuestResponse.stats:type_name -> admin.v1.TeamStats
-	13, // 7: admin.v1.AdminService.RegistAdminUser:input_type -> google.protobuf.Empty
-	13, // 8: admin.v1.AdminService.OpenEntry:input_type -> google.protobuf.Empty
-	13, // 9: admin.v1.AdminService.CloseEntry:input_type -> google.protobuf.Empty
-	3,  // 10: admin.v1.AdminService.RejectUser:input_type -> admin.v1.RejectUserRequest
-	4,  // 11: admin.v1.AdminService.ChangeTeam:input_type -> admin.v1.ChangeTeamRequest
-	13, // 12: admin.v1.AdminService.StartQuest:input_type -> google.protobuf.Empty
-	13, // 13: admin.v1.AdminService.ReadyQuiz:input_type -> google.protobuf.Empty
-	13, // 14: admin.v1.AdminService.CheckAnswers:input_type -> google.protobuf.Empty
-	13, // 15: admin.v1.AdminService.NextQuiz:input_type -> google.protobuf.Empty
-	13, // 16: admin.v1.AdminService.EndQuest:input_type -> google.protobuf.Empty
-	0,  // 17: admin.v1.AdminService.RegistAdminUser:output_type -> admin.v1.RegistAdminUserResponse
-	2,  // 18: admin.v1.AdminService.OpenEntry:output_type -> admin.v1.OpenEntryResponse
-	13, // 19: admin.v1.AdminService.CloseEntry:output_type -> google.protobuf.Empty
-	13, // 20: admin.v1.AdminService.RejectUser:output_type -> google.protobuf.Empty
-	13, // 21: admin.v1.AdminService.ChangeTeam:output_type -> google.protobuf.Empty
-	5,  // 22: admin.v1.AdminService.StartQuest:output_type -> admin.v1.StartQuestResponse
-	13, // 23: admin.v1.AdminService.ReadyQuiz:output_type -> google.protobuf.Empty
-	7,  // 24: admin.v1.AdminService.CheckAnswers:output_type -> admin.v1.CheckAnswersResponse
-	13, // 25: admin.v1.AdminService.NextQuiz:output_type -> google.protobuf.Empty
-	10, // 26: admin.v1.AdminService.EndQuest:output_type -> admin.v1.EndQuestResponse
-	17, // [17:27] is the sub-list for method output_type
-	7,  // [7:17] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	11, // 4: admin.v1.CheckAnswersResponse.correct_choice:type_name -> common.v1.Choice
+	8,  // 5: admin.v1.TeamStats.members_stats:type_name -> admin.v1.UserStats
+	12, // 6: admin.v1.EndQuestResponse.result:type_name -> common.v1.Result
+	9,  // 7: admin.v1.EndQuestResponse.stats:type_name -> admin.v1.TeamStats
+	13, // 8: admin.v1.AdminService.RegistAdminUser:input_type -> google.protobuf.Empty
+	13, // 9: admin.v1.AdminService.OpenEntry:input_type -> google.protobuf.Empty
+	13, // 10: admin.v1.AdminService.CloseEntry:input_type -> google.protobuf.Empty
+	3,  // 11: admin.v1.AdminService.RejectUser:input_type -> admin.v1.RejectUserRequest
+	4,  // 12: admin.v1.AdminService.ChangeTeam:input_type -> admin.v1.ChangeTeamRequest
+	13, // 13: admin.v1.AdminService.StartQuest:input_type -> google.protobuf.Empty
+	13, // 14: admin.v1.AdminService.ReadyQuiz:input_type -> google.protobuf.Empty
+	13, // 15: admin.v1.AdminService.CheckAnswers:input_type -> google.protobuf.Empty
+	13, // 16: admin.v1.AdminService.NextQuiz:input_type -> google.protobuf.Empty
+	13, // 17: admin.v1.AdminService.EndQuest:input_type -> google.protobuf.Empty
+	0,  // 18: admin.v1.AdminService.RegistAdminUser:output_type -> admin.v1.RegistAdminUserResponse
+	2,  // 19: admin.v1.AdminService.OpenEntry:output_type -> admin.v1.OpenEntryResponse
+	13, // 20: admin.v1.AdminService.CloseEntry:output_type -> google.protobuf.Empty
+	13, // 21: admin.v1.AdminService.RejectUser:output_type -> google.protobuf.Empty
+	13, // 22: admin.v1.AdminService.ChangeTeam:output_type -> google.protobuf.Empty
+	5,  // 23: admin.v1.AdminService.StartQuest:output_type -> admin.v1.StartQuestResponse
+	13, // 24: admin.v1.AdminService.ReadyQuiz:output_type -> google.protobuf.Empty
+	7,  // 25: admin.v1.AdminService.CheckAnswers:output_type -> admin.v1.CheckAnswersResponse
+	13, // 26: admin.v1.AdminService.NextQuiz:output_type -> google.protobuf.Empty
+	10, // 27: admin.v1.AdminService.EndQuest:output_type -> admin.v1.EndQuestResponse
+	18, // [18:28] is the sub-list for method output_type
+	8,  // [8:18] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_admin_v1_admin_proto_init() }
