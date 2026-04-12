@@ -8,6 +8,10 @@ on:
         value: ${{ jobs.build.outputs.build-path }}
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
