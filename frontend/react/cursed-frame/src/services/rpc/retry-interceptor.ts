@@ -1,5 +1,7 @@
 import { Code, ConnectError, type Interceptor } from "@connectrpc/connect";
 
+import { waitExponentialBackoff } from "@/utils/util";
+
 const retryInterceptor: (maxRetry: number) => Interceptor =
   (maxRetry) => (next) => async (req) => {
     let lastErr: unknown;
@@ -12,8 +14,7 @@ const retryInterceptor: (maxRetry: number) => Interceptor =
           e instanceof ConnectError &&
           e.code in [Code.Internal, Code.Unavailable, Code.Unknown]
         ) {
-          const delay = Math.pow(2, i);
-          await new Promise((resolve) => setTimeout(() => resolve, delay));
+          await waitExponentialBackoff(i);
         } else throw e;
       }
     }
