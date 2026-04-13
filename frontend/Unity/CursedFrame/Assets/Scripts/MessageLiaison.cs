@@ -23,6 +23,7 @@ public class MessageLiaison : MonoBehaviour
 
     private const float landscapeFov = 70.0f;
     private const float portlateFov = 55.0f;
+    private const int maxRetry = 3;
 
     [Serializable]
     private class TeamInfo
@@ -211,20 +212,26 @@ public class MessageLiaison : MonoBehaviour
 
     private IEnumerator GetTexture(string textureURL, Action<Texture2D> callback)
     {
-        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(textureURL))
+        for (int i = 0; i < maxRetry; i++)
         {
-            uwr.SetRequestHeader("Authorization", $"Bearer {accessToken}");
-            yield return uwr.SendWebRequest();
+            using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(textureURL))
+            {
+                uwr.SetRequestHeader("Authorization", $"Bearer {accessToken}");
+                yield return uwr.SendWebRequest();
 
-            if (uwr.result != UnityWebRequest.Result.Success)
-            {
-                Debug.Log(uwr.error);
-            }
-            else
-            {
-                Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
-                texture.wrapMode = TextureWrapMode.Clamp;
-                callback?.Invoke(texture);
+                if (uwr.result == UnityWebRequest.Result.Success)
+                {
+                    Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
+                    texture.wrapMode = TextureWrapMode.Clamp;
+                    callback?.Invoke(texture);
+                    yield break;
+                }
+                else
+                {
+                    Debug.Log($"Texture download failed at {i} time: {uwr.error}");
+                    float waitSec = Mathf.Pow(2, i);
+                    yield return new WaitForSeconds(waitSec);
+                }
             }
         }
     }
