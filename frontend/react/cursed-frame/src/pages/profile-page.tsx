@@ -1,10 +1,10 @@
-import { useCallback, useContext, useMemo, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 
 import RegistProfileForm from "@/components/regist-profile-form";
 import TeamInfoPanel from "@/components/team-info-panel";
 import { UserStatusContext } from "@/context/user-status-context";
+import useRpcClient from "@/hooks/use-rpc-client";
 import useStreamObserver from "@/hooks/use-stream-observer";
-import getGuestClient from "@/services/rpc/guest-client";
 
 import type { ProfileQuestion } from "@/components/regist-profile-form";
 import type { LobbyStatus } from "@/gen/lobby/v1/lobby_pb";
@@ -21,10 +21,7 @@ const ProfilePage = ({ toNext }: { toNext: () => void }) => {
   const [isTeamInfoShow, setIsTeamInfoShow] = useState<boolean>(false);
   const [members, setMembers] = useState<string[]>([]);
   const { userStatus, setUserStatus } = useContext(UserStatusContext);
-  const guestClient = useMemo<ReturnType<typeof getGuestClient>>(
-    () => getGuestClient(() => userStatus.token),
-    [userStatus.token],
-  );
+  const guestClient = useRpcClient("guest");
   const lobbyStatusStream = useCallback(
     (signal: AbortSignal) => guestClient.joinLobby({ signal: signal }),
     [guestClient],

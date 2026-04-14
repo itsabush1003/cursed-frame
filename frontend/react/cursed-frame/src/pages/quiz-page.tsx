@@ -84,7 +84,7 @@ const QuizPage = ({
   const { userStatus } = useContext(UserStatusContext);
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const choiceRef = useRef<ChoiceRef | null>(null);
-  const client = useRpcClient();
+  const client = useRpcClient(userStatus.type);
   const callAnswerApi = useCallback(async () => {
     if ("checkAnswers" in client) {
       // adminの場合

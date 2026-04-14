@@ -22,7 +22,7 @@ func (esh *EntryServiceHandler) Entry(
 ) (*connect.Response[entryv1.EntryResponse], error) {
 	entryDto, err := esh.eu.Execute(req.Msg.UserName)
 	if err != nil {
-		return nil, err
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 	res := connect.NewResponse(&entryv1.EntryResponse{
 		AccessToken:  entryDto.AccessToken,
@@ -36,7 +36,7 @@ func (esh *EntryServiceHandler) Reconnect(
 ) (*connect.Response[entryv1.ReconnectResponse], error) {
 	token, err := esh.ru.Execute(req.Msg.ReconnectKey)
 	if err != nil {
-		return nil, err
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 	res := connect.NewResponse(&entryv1.ReconnectResponse{
 		AccessToken: token,

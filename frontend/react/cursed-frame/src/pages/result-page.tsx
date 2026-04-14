@@ -26,7 +26,7 @@ const ResultPage = () => {
   const { userStatus } = useContext(UserStatusContext);
   const [result, setResult] = useState<Result>(Result.UNSPECIFIED);
   const [stats, setStats] = useState<TeamStats[]>([]);
-  const client = useRpcClient();
+  const client = useRpcClient(userStatus.type);
   const callResultApi = useCallback(async () => {
     if ("endQuest" in client) {
       // adminの場合
