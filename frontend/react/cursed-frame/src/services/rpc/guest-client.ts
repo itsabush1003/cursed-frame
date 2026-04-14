@@ -4,14 +4,24 @@ import { createConnectTransport } from "@connectrpc/connect-web";
 import { LobbyService } from "@/gen/lobby/v1/lobby_pb";
 import { QuestService } from "@/gen/quest/v1/quest_pb";
 import { entryClient } from "@/services/rpc/entry-client";
+import reauthInterceptor from "@/services/rpc/reauth-interceptor";
 import retryInterceptor from "@/services/rpc/retry-interceptor";
 import getSetAccessTokenInterceptor from "@/services/rpc/set-access-token-interceptor";
 import { pathReplaceRegex } from "@/utils/util";
 
-const getGuestClient = (getToken: () => string) => {
+const getGuestClient = (
+  getToken: () => string,
+  resetToken: (
+    refreshTokenFunc: (key: string) => Promise<string>,
+  ) => Promise<void>,
+) => {
   const connectWithAuthTransport = createConnectTransport({
     baseUrl: window.location.pathname.replace(pathReplaceRegex, "/rpc"),
-    interceptors: [retryInterceptor(3), getSetAccessTokenInterceptor(getToken)],
+    interceptors: [
+      retryInterceptor(3),
+      reauthInterceptor(() => resetToken(entryClient.reconnect)),
+      getSetAccessTokenInterceptor(getToken),
+    ],
   });
 
   const lobbyClient = createClient(LobbyService, connectWithAuthTransport);

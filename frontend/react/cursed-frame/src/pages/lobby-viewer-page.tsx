@@ -1,23 +1,18 @@
-import { useCallback, useContext, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { css } from "@emotion/react";
 
 import UsersTable, { type rowData } from "@/components/users-table";
-import { UserStatusContext } from "@/context/user-status-context";
+import useRpcClient from "@/hooks/use-rpc-client";
 import useStreamObserver from "@/hooks/use-stream-observer";
-import getAdminClient from "@/services/rpc/admin-client";
 
 import type { OpenEntryResponse } from "@/gen/admin/v1/admin_pb";
 
 const LobbyViewerPage = ({ toNext }: { toNext: (teamNum: number) => void }) => {
-  const { userStatus } = useContext(UserStatusContext);
   const [entryUsersData, setEntryUsersData] = useState<rowData[]>([]);
   const [isExpectedNumEntered, setIsExpectedNumEntered] =
     useState<boolean>(false);
-  const adminClient = useMemo(
-    () => getAdminClient(() => userStatus.token),
-    [userStatus.token],
-  );
+  const adminClient = useRpcClient("admin");
   const lobbyStatusStream = useCallback(
     (signal: AbortSignal) => adminClient.openEntry({}, { signal: signal }),
     [adminClient],

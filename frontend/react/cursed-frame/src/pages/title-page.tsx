@@ -33,7 +33,12 @@ const TitlePage = ({ toNext }: { toNext: () => void }) => {
       // adminのnameの自動生成がadminClientにあるので、entryClientではなくadminClientを使う
       const { default: getAdminClient } =
         await import("@/services/rpc/admin-client");
-      const client = getAdminClient(() => userStatus.token);
+      const client = getAdminClient(
+        () => userStatus.token,
+        async (refreshToken: (key: string) => Promise<string>) => {
+          await refreshToken("");
+        },
+      );
       const response = await client.entry();
       setUserStatus({ token: response.accessToken });
       LocalStorageRepository.saveSecret(response.reconnectKey);
