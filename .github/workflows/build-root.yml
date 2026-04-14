@@ -59,6 +59,10 @@ jobs:
   build-unity:
     needs: detect-changes
     if: needs.detect-changes.outputs.unity-changed == 'true'
+    permissions:
+      contents: read
+      checks: write
+      actions: write
     uses: ./.github/workflows/build-unity.yml
     secrets:
       UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
