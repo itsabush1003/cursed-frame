@@ -35,7 +35,7 @@ const useClientPromise = <T extends UserType>(userType: T) => {
   return clientPromise as Extract<clientPromise, { type: T }>;
 };
 
-const resetToken = async (
+export const resetToken = async (
   getSecretKey: () => string | null,
   refreshToken: (key: string) => Promise<string>,
   setToken: (newToken: string) => void,

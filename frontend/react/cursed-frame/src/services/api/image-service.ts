@@ -5,7 +5,7 @@ const baseUrl = window.location.pathname.replace(
   "/rest/images",
 );
 const fetchWithRetry = async (
-  url: URL | string,
+  url: RequestInfo | URL,
   maxRetry: number,
   init?: RequestInit,
 ) => {
@@ -24,19 +24,32 @@ const fetchWithRetry = async (
 
 export const getImageService = (
   getToken: () => string,
+  resetToken: () => Promise<void>,
   maxRetry: number = 3,
 ) => {
+  let resetFlg = false; // resetToken実行後に再帰で無限ループに入らせない為のフラグ
   const imageService = {
-    download: async (imageId: string) => {
+    download: async (imageId: string): Promise<string> => {
       const token = getToken();
       const response = await fetchWithRetry(`${baseUrl}/${imageId}`, maxRetry, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!response.ok) throw new Error("Download Failed");
+      if (!response.ok) {
+        if (response.status === 401 && !resetFlg) {
+          resetFlg = true;
+          try {
+            await resetToken();
+            return await imageService.download(imageId);
+          } finally {
+            resetFlg = false;
+          }
+        } else throw new Error("Download Failed");
+      }
+      resetFlg = false;
       const blob = await response.blob();
       return URL.createObjectURL(blob);
     },
-    upload: async (imageBlob: Blob) => {
+    upload: async (imageBlob: Blob): Promise<void> => {
       const formData = new FormData();
       formData.append("image", imageBlob, "profile-image.jpg");
 
@@ -47,7 +60,18 @@ export const getImageService = (
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) throw new Error("Upload Failed");
+      if (!response.ok) {
+        if (response.status === 401 && !resetFlg) {
+          resetFlg = true;
+          try {
+            await resetToken();
+            return await imageService.upload(imageBlob);
+          } finally {
+            resetFlg = false;
+          }
+        } else throw new Error("Upload Failed");
+      }
+      resetFlg = false;
       return;
     },
   };
