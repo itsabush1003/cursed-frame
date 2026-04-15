@@ -67,7 +67,7 @@ public class MagiciansController : MonoBehaviour
                 SetupMagician(magicians[i], target, i < colors.Length ? colors[i] : Color.clear);
                 animators[i].SetBool("isRunning", true);
             }
-            moveToBase().OnComplete(() => {
+            MoveToBase().OnComplete(() => {
                 for (int i = 0; i < magicians.Length && i < teamNum; i++)
                 {
                     animators[i].SetBool("isRunning", false);
@@ -86,7 +86,7 @@ public class MagiciansController : MonoBehaviour
             SetupMagician(magicians[teamId-1], target, colors[teamId-1]);
             animators[teamId-1].SetBool("isRunning", true);
             DOTween.Sequence()
-                .Append(moveToBase())
+                .Append(MoveToBase())
                 .Join(magicians[teamId-1].transform.DOLookAt(target.position, 2.0f).SetDelay(2.0f))
                 .OnComplete(() => {
                     animators[teamId-1].SetBool("isRunning", false);
@@ -103,8 +103,9 @@ public class MagiciansController : MonoBehaviour
     /// <param name="unAttackTeamId">攻撃できないチームのID</param>
     /// <param name="targetPosition">攻撃を当てるターゲットのワールド座標</param>
     /// <param name="isSuccesses">攻撃が成功するかどうかが入った配列　teamId==0の時はチーム数分、1<=teamId<=teamNumの時は一つだけ</param>
+    /// <param name="createHitMotion">攻撃が当たった事を表現するアニメーションを生成する関数</param>
     /// <param name="callback">アニメーション終了時に呼ばれるコールバック関数</param>
-    public void StartAttackAnimation(int teamId, int unAttackTeamId, Vector3 targetPosition, bool[] isSuccesses, System.Action callback = null)
+    public void StartAttackAnimation(int teamId, int unAttackTeamId, Vector3 targetPosition, bool[] isSuccesses, System.Func<Tweener> createHitMotion, System.Action callback = null)
     {
         Sequence sequence = DOTween.Sequence();
         if (teamId == 0)
@@ -114,10 +115,11 @@ public class MagiciansController : MonoBehaviour
                 if (i+1 == unAttackTeamId) continue;
                 sequence.Join(SetupBulletAnimation(bullets[i], isSuccesses[i] ? targetPosition : transform.position));
             }
+            sequence.Insert(3.0f, createHitMotion());
         }
         else if (0 < teamId && teamId <= MAX_CHARA_NUM && teamId != unAttackTeamId)
         {
-            sequence.Append(SetupBulletAnimation(bullets[teamId-1], isSuccesses[0] ? targetPosition : transform.position));
+            sequence.Append(SetupBulletAnimation(bullets[teamId-1], isSuccesses[0] ? targetPosition : transform.position).Join(createHitMotion()));
         }
         else
         {
@@ -213,7 +215,7 @@ public class MagiciansController : MonoBehaviour
     /// キャラクタを初期位置に移動するアニメーションを返す（再生する）関数
     /// </summary>
     /// <returns>Tweenアニメーション</returns>
-    private Tweener moveToBase()
+    private Tweener MoveToBase()
     {
         return transform.DOMove(basePosition, 4.0f);
     }
