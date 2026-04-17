@@ -574,7 +574,7 @@ func (gm *GameManager) Answer(uid uuid.UUID, tid TeamID, answer Choice) (AnswerW
 	teamAnswer := gm.room.Answer(tid, uid, answer)
 	gm.room.UpdatePersonalStats(uid, answer)
 	if teamAnswer.TeamAnswer.ChoiceID == 0 {
-		return teamAnswer, false, errors.New("team's answer cannot received.")
+		return teamAnswer, false, errors.New("team's answer cannot received")
 	}
 	return teamAnswer, teamAnswer.TeamAnswer.ChoiceID == gm.GetCurrentAnswer().ChoiceID, nil
 }

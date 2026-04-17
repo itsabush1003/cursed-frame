@@ -35,7 +35,7 @@ func (oeu *OpenEntryUsecase) Execute(
 			// users取得をselectの前に出して共通化すると情報が古くなってしまうのでコピペで
 			uids := oeu.gm.GetLobbyUsers()
 			users, _ := oeu.ur.FetchByUserIDs(uids)
-			onTick(users)
+			_ = onTick(users)
 			return nil
 		case <-networkCtx.Done():
 			return failedCallback(networkCtx.Err())

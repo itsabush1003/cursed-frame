@@ -41,13 +41,13 @@ func CreateCertificateWithAutoCert(domain string) (func(*tls.ClientHelloInfo) (*
 	if err != nil {
 		return nil, nil, err
 	}
-	listener.Close()
+	_ = listener.Close()
 	if domain == "" {
-		fmt.Println("Warning: You enabled the autocert flag without specifying a domain. In this case, the domain is inferred from the first access to the server.")
+		fmt.Println("Warning: You enabled the autocert flag without specifying a domain. In this case, the domain is inferred from the first access to the server")
 	} else if domain == "localhost" || strings.HasPrefix(domain, "localhost:") {
-		return nil, nil, errors.New("'localhost' domain cannot create certificate.")
+		return nil, nil, errors.New("'localhost' domain cannot create certificate")
 	} else if strings.HasPrefix(domain, "*") {
-		return nil, nil, errors.New("Wildcard certificate does not supported.")
+		return nil, nil, errors.New("Wildcard certificate does not supported")
 	}
 	var mu sync.Mutex
 	hostPolicy := autocert.HostWhitelist(domain)
@@ -78,14 +78,16 @@ func CreateCertificateWithAutoCert(domain string) (func(*tls.ClientHelloInfo) (*
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	// acmeチャレンジ用サーバ起動
-	go acmeServer.ListenAndServe()
+	go acmeServer.ListenAndServe()	//nolint:errcheck
 	// acmeチャレンジ用サーバをShutdownするためのgoroutine
-	// 証明書が取得される前に別の理由でプログラムが修了した時に対応するため
+	// 証明書が取得される前に別の理由でプログラムが終了した時に対応するため
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, forceShutdown := context.WithTimeout(context.Background(), 5*time.Second)
 		defer forceShutdown()
-		acmeServer.Shutdown(shutdownCtx)
+		if err := acmeServer.Shutdown(shutdownCtx); err != nil {
+			_ = acmeServer.Close()
+		}
 	}()
 	getCertificate := func(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
 		cert, err := manager.GetCertificate(hello)

@@ -9,7 +9,7 @@ import (
 )
 
 type AdminCheckMiddleware struct {
-	adminUserId string
+	adminUserID string
 }
 
 func (acm *AdminCheckMiddleware) checkAdmin(ctx context.Context) error {
@@ -17,10 +17,10 @@ func (acm *AdminCheckMiddleware) checkAdmin(ctx context.Context) error {
 	if user == nil {
 		return errors.New("You are Unauthorized")
 	}
-	if acm.adminUserId == "" {
-		acm.adminUserId = user.GetUserID().String()
-		fmt.Println("Administrator has registered: ", acm.adminUserId[:4]+"xxxx-x...")
-	} else if acm.adminUserId != user.GetUserID().String() {
+	if acm.adminUserID == "" {
+		acm.adminUserID = user.GetUserID().String()
+		fmt.Println("Administrator has registered: ", acm.adminUserID[:4]+"xxxx-x...")
+	} else if acm.adminUserID != user.GetUserID().String() {
 		return errors.New("You are not administrator")
 	}
 	return nil
@@ -61,6 +61,6 @@ func (acm *AdminCheckMiddleware) WrapStreamingClient(next connect.StreamingClien
 
 func NewAdminCheckMiddleware() *AdminCheckMiddleware {
 	return &AdminCheckMiddleware{
-		adminUserId: "",
+		adminUserID: "",
 	}
 }

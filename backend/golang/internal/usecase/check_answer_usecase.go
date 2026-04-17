@@ -11,7 +11,7 @@ func (cau *CheckAnswersUsecase) Execute() (map[core.TeamID]core.Result, core.Cho
 	if err != nil {
 		return nil, core.Choice{}, err
 	}
-	cau.gm.DistributeAnswer(teamResult, answerMap)
+	_ = cau.gm.DistributeAnswer(teamResult, answerMap)
 	return teamResult, cau.gm.GetCurrentAnswer(), nil
 }
 

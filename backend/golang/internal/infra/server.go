@@ -72,7 +72,7 @@ func NewServer(addr string, tlsConfig *tls.Config, handler http.Handler) *Server
 			Handler:     handler,
 			Protocols:   protocol,
 			TLSConfig:   tlsConfig,
-			BaseContext: func(l net.Listener) context.Context { return ctx },
+			BaseContext: func(l net.Listener) context.Context { return ctx },	//nolint: unused
 		},
 		useTLS: protocol.HTTP2(),
 	}

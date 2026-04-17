@@ -22,7 +22,7 @@ func (ueu *EntryUsecase) Execute(name string) (EntryDTO, error) {
 	}
 	key, err := util.Encrypt(user.GetUserID().String(), ueu.secret)
 	if err != nil {
-		return EntryDTO{}, nil
+		return EntryDTO{}, err
 	}
 	if err = ueu.ur.Save(user); err != nil {
 		return EntryDTO{}, err

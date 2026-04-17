@@ -91,9 +91,7 @@ const QuizPage = ({
         (map, answer) =>
           answer.answer !== undefined
             ? (map.has(answer.answer.choiceId)
-                ? map
-                    .get(answer.answer.choiceId)
-                    ?.push(answer.teamColor)
+                ? map.get(answer.answer.choiceId)?.push(answer.teamColor)
                 : map.set(answer.answer.choiceId, [answer.teamColor]),
               map)
             : map,
@@ -111,6 +109,7 @@ const QuizPage = ({
       // guestの場合
       let selectedChoice = choiceRef.current?.getSelected();
       if (!selectedChoice) {
+        // 時間内にいずれの選択肢も選んでいない場合、ランダムに選ぶ
         selectedChoice =
           currentQuiz.choices[
             Math.floor(Math.random() * currentQuiz.choices.length)
@@ -208,7 +207,7 @@ const QuizPage = ({
   useEffect(() => {
     if (showQuiz) {
       const id = setInterval(() => {
-        setRemainTime((prev) => prev - 0.1);
+        setRemainTime((prev) => (prev >= 0 ? prev - 0.1 : prev));
       }, 100);
       return () => clearInterval(id);
     }
@@ -243,6 +242,7 @@ const QuizPage = ({
 
   return (
     <>
+      {isQuizEnd && <button onClick={toNext}>結果を見る</button>}
       <CSSTransition
         nodeRef={nodeRef}
         classNames="answers"
@@ -296,7 +296,6 @@ const QuizPage = ({
           )}
         </div>
       </CSSTransition>
-      {isQuizEnd && <button onClick={toNext}>結果を見る</button>}
     </>
   );
 };

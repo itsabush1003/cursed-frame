@@ -13,7 +13,11 @@ const GameStartButton = ({
 
   return (
     <div css={containerStyle}>
-      {userStatus.type === "admin" && <button css={buttonStyle}>設定</button>}
+      {userStatus.type === "admin" && (
+        <button disabled css={buttonStyle}>
+          設定
+        </button>
+      )}
       <button css={buttonStyle} onClick={onStartButton}>
         {userStatus.type === "admin"
           ? "参加登録を受け付ける"
