@@ -58,11 +58,9 @@ const answerResultAnimationSec: number = 3;
 
 const QuizPage = ({
   toNext,
-  isSceneReady,
   eventController,
 }: {
   toNext: () => void;
-  isSceneReady: boolean;
   eventController: eventController;
 }) => {
   const [remainTime, setRemainTime] = useState<number>(MaxRemainTime);
@@ -249,7 +247,7 @@ const QuizPage = ({
         nodeRef={nodeRef}
         classNames="answers"
         timeout={uiAnimateDuration}
-        in={isSceneReady && showQuiz}
+        in={showQuiz}
       >
         <div ref={nodeRef} css={animationStyle}>
           <div

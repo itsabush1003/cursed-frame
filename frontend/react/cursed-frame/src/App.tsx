@@ -195,11 +195,10 @@ function App() {
                   />
                 </Suspense>
               ))}
-            {currentState === GameState.Quiz && (
+            {currentState === GameState.Quiz && isSceneReady && (
               <Suspense fallback={<LoadingMark />}>
                 <QuizPage
                   toNext={() => setCurrentState(GameState.Result)}
-                  isSceneReady={isSceneReady}
                   eventController={{
                     eventSender: unityService.toUnity,
                     registEventReceiver: unityService.fromUnity,
