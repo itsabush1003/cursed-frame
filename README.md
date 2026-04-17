@@ -5,25 +5,28 @@
 
 > **The mini game for small or medium team (about over 10 and under 60) to promote mutual understandings.**
 
-!["タイトル画面"](images/Screenshot_Title.png)
-!["ゲーム画面1"](images/Screenshot_Ingame.png)
-!["ゲーム画面2"](images/Screenshot_Attack.png)
+Japanese version is [here](docs/README.ja.md)
+
+!["Screen of Title"](images/Screenshot_Title.png)
+!["Screen of ingame 1"](images/Screenshot_Ingame.png)
+!["Screen of ingame 2"](images/Screenshot_Attack.png)
 
 ## Abstract
 
 This game is a type of quiz game, but instead of general knowledge questions, the questions are about the other players in the game.
+I hope that answering that question will give you an opportunity to think about other players.
 
 ### Background
 
-The idea for this game came about when I was a new employee. During a social gathering in my department, the department head asked us to come up with an entertainment event that would help foster camaraderie among the members, including us new employees.
-At the time, I loved the quiz game that the company was releasing. The game featured a wizard protagonist, the player's avatar, who, along with several companions as cards, would share their power with them by answering quizzes, allowing them to attack enemies. This setting, along with the concept of "competition and cooperation" that the president had taught us during new employee training a few weeks prior to the department head's request, and the purpose of the meeting, all clicked into place in my mind.
-Unfortunately, this project never materialized at the time. I simply lacked all the necessary resources, including time and my own technical skills.
+The idea for this game came about when I was a new employee. During a social gathering in my department, the department head asked us to come up with an entertainment event that would help foster camaraderie among the members, including us new employees.  
+At the time, I loved the quiz game that the company was releasing. The game featured a wizard protagonist, the player's avatar, who, along with several companions as cards, would share their power with them by answering quizzes, allowing them to attack enemies. This setting, along with the concept of "competition and cooperation" that the president had taught us during new employee training a few weeks prior to the department head's request, and the purpose of the meeting, all clicked into place in my mind.  
+Unfortunately, this project never materialized at the time. I simply lacked all the necessary resources, including time and my own technical skills.  
 Even so, I felt it would be a shame to abandon this project. The gears were simply clicking into place in my mind. So I decided to pursue this project as a personal project.
 
 ## Features
 
 - The format of a browser game that is easy to participate in
-  - Regardless of the type or specifications of your device, a certain degree of consistent operation can be guaranteed, and there's no need for the troublesome process of installing unofficial apps.
+  - Regardless of the type or specifications of your device, a certain degree of consistent operation can be guaranteed, and there's no need for the troublesome process and storage space of installing unofficial apps.
 - Creating quizzes based on information provided by the users themselves
   - By actually conducting a survey with participants and using their responses as quiz options, we anticipate not only gaining personal information, but also fostering a sense of camaraderie from having answered the same survey, stimulating interest in options other than the correct answer, and increasing immersion through improved connectivity between the in-game world and the real world.
 - Separation of the overall screen from individual screens
@@ -61,7 +64,7 @@ Even so, I felt it would be a shame to abandon this project. The gears were simp
               [Unity]
 ```
 
-The detail of architecture is ~~[here](docs/architecture.md)~~(Under Construction).
+The detail of architecture is [here](docs/architecture.md).
 
 ## Usage
 
@@ -115,7 +118,7 @@ cd ../../../
 
 # build react project
 cd frontend/react/cursed-frame
-# change prefix of filename of webgl which built by Unity
+# adjust the reference to match the prefix of filename of webgl which built by Unity
 echo "VITE_UNITY_WEBGL_NAME=CursedFrame" > .env.local
 
 bun run build
@@ -138,7 +141,7 @@ cd ../../
 ### Start Game
 
 ```bash
-backend/golang/cursed_frame -N {total_participants_number} -T {separared_team_number} [-domain {domain_which_the_server_started}]
+backend/golang/cursed_frame -N {total_participants_number} -T {separated_team_number} [-domain {domain_which_the_server_started}]
 ```
 
 if you have started server, you can see 2 paths on the console by stdout, like
@@ -151,10 +154,12 @@ guest: <your_domain>:8888/[random strings]/guest
 First one which end with 'admin' is for you, as an administrator,
 and last one which end with 'guest' is for participants,
 so you should tell last one to participants, and must not tell first one.
-At that time, don't forget to provide not only the path displayed on the screen, but also the domain name of the running server.
-After that, you access the path, and click the button to start game, and then, just follow the on-screen instructions and you'll be fine.
+At that time, don't forget to provide not only the path displayed on the screen, but also the domain name of the running server.  
+(The `<your_domain>` above will display the domain you specified as an argument when starting the server, but if you did not specify an argument, it will display as `<your_domain>` as written)  
+After that, you access the path, and click the right button to accepting applications from participants to start game.
+And then, after all participants have finished preparing, close registration, and just follow the on-screen instructions and you'll be fine.
 
-if you want to know detail of screen transitions, you can look ~~[here](docs/screen_transitions.md)~~(Under Construction).
+if you want to know detail of screen transitions with operations, you can look [here](docs/screen_transitions.pdf).
 
 ## Acknowledgement
 
