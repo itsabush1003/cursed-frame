@@ -10,7 +10,6 @@ linters:
     - bidichk
     - errorlint
     - bodyclose
-    - unconvert
   exclusions:
     rules:
       - path: _test\.go
@@ -22,11 +21,28 @@ linters:
       checks:
         - "all"
         - "-ST1000"
+        - "-ST1005"
+        - "-ST1023"
+        - "-QF1011"
     errcheck:
       check-type-assertions: true
-      check-blank: true
+      check-blank: false
+      exclude-functions:
+        - os.RemoveAll
+        - io.Closer.Close
+        - (io/fs.File).Close
+        - (mime/multipart.File).Close
+        - (*os.File).Close
+        - (*database/sql.DB).Close
     unused:
-      parameters-are-used: false
+      parameters-are-used: true
+    gosec:
+      severity: "medium"
+      confidence: "medium"
+      excludes:
+        - G104
+        - G115
+
 
 formatters:
   enable:

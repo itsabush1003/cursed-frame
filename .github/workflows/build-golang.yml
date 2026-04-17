@@ -19,6 +19,13 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: "1.25"
+      
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.6.0
+          working-directory: backend/golang
+          args: --config .golangci.yml
 
       - name: Download React artifacts
         uses: actions/download-artifact@v4
