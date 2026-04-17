@@ -20,8 +20,8 @@ type WriteRequest struct {
 }
 
 type IDatabase interface {
-	Command(dbName string, request WriteRequest)
-	Query(dbName string, sql string, params ...any) (*sqlx.Rows, error)
-	QueryRow(dbName string, sql string, params ...any) *sqlx.Row
-	QueryIn(dbName string, sql string, params ...any) (*sqlx.Rows, error)
+	Command(string, WriteRequest)
+	Query(string, string, ...any) (*sqlx.Rows, error)
+	QueryRow(string, string, ...any) *sqlx.Row
+	QueryIn(string, string, ...any) (*sqlx.Rows, error)
 }

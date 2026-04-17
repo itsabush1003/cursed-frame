@@ -6,7 +6,7 @@ import (
 )
 
 type AnswerDTO struct {
-	ChoiceID uint
+	ChoiceID   uint
 	ChoiceText string
 }
 

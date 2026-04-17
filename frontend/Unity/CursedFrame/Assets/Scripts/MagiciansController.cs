@@ -40,18 +40,6 @@ public class MagiciansController : MonoBehaviour
         }
     }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     /// <summary>
     /// キャラクタのGameObjectを取得する関数
     /// </summary>
@@ -79,7 +67,7 @@ public class MagiciansController : MonoBehaviour
                 SetupMagician(magicians[i], target, i < colors.Length ? colors[i] : Color.clear);
                 animators[i].SetBool("isRunning", true);
             }
-            moveToBase().OnComplete(() => {
+            MoveToBase().OnComplete(() => {
                 for (int i = 0; i < magicians.Length && i < teamNum; i++)
                 {
                     animators[i].SetBool("isRunning", false);
@@ -98,7 +86,7 @@ public class MagiciansController : MonoBehaviour
             SetupMagician(magicians[teamId-1], target, colors[teamId-1]);
             animators[teamId-1].SetBool("isRunning", true);
             DOTween.Sequence()
-                .Append(moveToBase())
+                .Append(MoveToBase())
                 .Join(magicians[teamId-1].transform.DOLookAt(target.position, 2.0f).SetDelay(2.0f))
                 .OnComplete(() => {
                     animators[teamId-1].SetBool("isRunning", false);
@@ -113,22 +101,32 @@ public class MagiciansController : MonoBehaviour
     /// </summary>
     /// <param name="teamId">アニメーションを適用するチームのID</param>
     /// <param name="unAttackTeamId">攻撃できないチームのID</param>
-    /// <param name="target">攻撃を当てるターゲットのワールド座標</param>
-    /// <param name="isSuccesses">攻撃が成功するかどうかが入った配列　teamId==0の時はチーム数分、1<teamId<teamNumの時は一つだけ</param>
-    public void StartAttackAnimation(int teamId, int unAttackTeamId, Vector3 target, bool[] isSuccesses)
+    /// <param name="targetPosition">攻撃を当てるターゲットのワールド座標</param>
+    /// <param name="isSuccesses">攻撃が成功するかどうかが入った配列　teamId==0の時はチーム数分、1<=teamId<=teamNumの時は一つだけ</param>
+    /// <param name="createHitMotion">攻撃が当たった事を表現するアニメーションを生成する関数</param>
+    /// <param name="callback">アニメーション終了時に呼ばれるコールバック関数</param>
+    public void StartAttackAnimation(int teamId, int unAttackTeamId, Vector3 targetPosition, bool[] isSuccesses, System.Func<Tweener> createHitMotion, System.Action callback = null)
     {
+        Sequence sequence = DOTween.Sequence();
         if (teamId == 0)
         {
             for (var i = 0; i < bullets.Length; i++)
             {
                 if (i+1 == unAttackTeamId) continue;
-                SetupBulletAnimation(bullets[i], isSuccesses[i] ? target : transform.position);
+                sequence.Join(SetupBulletAnimation(bullets[i], isSuccesses[i] ? targetPosition : transform.position));
             }
+            sequence.Insert(3.0f, createHitMotion());
         }
         else if (0 < teamId && teamId <= MAX_CHARA_NUM && teamId != unAttackTeamId)
         {
-            SetupBulletAnimation(bullets[teamId-1], isSuccesses[0] ? target : transform.position);
+            sequence.Append(SetupBulletAnimation(bullets[teamId-1], isSuccesses[0] ? targetPosition : transform.position).Join(createHitMotion()));
         }
+        else
+        {
+            // 攻撃できないチームも他のチームとcallbackの実行タイミングを合わせる
+            sequence.AppendInterval(4.0f);
+        }
+        sequence.OnComplete(() => callback?.Invoke());
     }
 
     /// <summary>
@@ -163,17 +161,18 @@ public class MagiciansController : MonoBehaviour
     /// </summary>
     /// <param name="bullet">bulletのGameObject</param>
     /// <param name="target">bulletを当てるワールド座標</param>
-    private void SetupBulletAnimation(GameObject bullet, Vector3 target)
+    /// <returns>bulletのアニメーションのSequence</returns>
+    private Sequence SetupBulletAnimation(GameObject bullet, Vector3 target)
     {
         Vector3 originalPosition = bullet.transform.position;
         Vector3 originalScale = bullet.transform.localScale;
         Renderer energyRenderer = bullet.transform.Find("Energy").gameObject.GetComponent<Renderer>();
         Color originalColor = GetColorWithPB(energyRenderer);
         bullet.SetActive(true);
-        DOTween.Sequence()
+        return DOTween.Sequence()
             .AppendInterval(1.0f)
             .Append(bullet.transform.DOMove(target, 2.0f))
-            .Append(DOTween.To(() => originalColor.a, x => SetColorWithPB(energyRenderer, new Color(originalColor.r,originalColor.g,originalColor.b,x)), 0.0f, 1.0f).SetEase(Ease.OutExpo))
+            .Append(DOTween.To(() => originalColor.a, x => SetColorWithPB(energyRenderer, new Color(originalColor.r, originalColor.g, originalColor.b, x)), 0.0f, 1.0f).SetEase(Ease.OutExpo))
             // .Append(energyRenderer.materal.DOFade(0.0f, "_TintColor", 1.0f).SetEase(Ease.OutExpo))
             .Join(bullet.transform.DOScale(new Vector3(2.0f, 2.0f, 1.0f), 1.0f).SetEase(Ease.OutExpo))
             .OnComplete(() =>
@@ -216,7 +215,7 @@ public class MagiciansController : MonoBehaviour
     /// キャラクタを初期位置に移動するアニメーションを返す（再生する）関数
     /// </summary>
     /// <returns>Tweenアニメーション</returns>
-    private Tweener moveToBase()
+    private Tweener MoveToBase()
     {
         return transform.DOMove(basePosition, 4.0f);
     }

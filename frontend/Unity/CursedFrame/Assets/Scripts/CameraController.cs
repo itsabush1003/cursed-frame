@@ -78,12 +78,6 @@ public class CameraController : MonoBehaviour
         fadeController = GameObject.FindWithTag("Canvas").GetComponent<FadePanelController>();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     /// <summary>
     /// クエスト開始時のアニメーションを再生する関数
     /// </summary>

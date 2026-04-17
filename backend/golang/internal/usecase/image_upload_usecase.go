@@ -29,7 +29,9 @@ func (iuu *ImageUploadUsecase) Execute(fileSrc io.Reader, uid uuid.UUID) error {
 		return err
 	}
 
-	iuu.uir.Save(uid, fileName)
+	if err = iuu.uir.Save(uid, fileName); err != nil {
+		return err
+	}
 
 	return nil
 }

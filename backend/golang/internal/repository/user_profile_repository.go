@@ -57,6 +57,7 @@ func (upr *UserProfileRepository) FetchByProfileIDWithUserGroup(pid uint, users 
 		}
 		uid, err := uuid.Parse(dbProfile.UserID)
 		if err != nil {
+			return  nil, err
 		}
 		profile, err := model.NewUserProfile(
 			uid,

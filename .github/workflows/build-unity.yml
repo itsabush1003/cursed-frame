@@ -1,0 +1,91 @@
+name: Build Unity WebGL
+env:
+  BUILD_TARGET: WebGL
+  BUILD_DIR: frontend/Unity/build
+  BUILD_NAME: cursed_frame_webgl
+  PROJECT_PATH: frontend/Unity/CursedFrame
+
+on:
+  workflow_call:
+    secrets:
+      UNITY_EMAIL:
+        required: true
+      UNITY_LICENSE:
+        required: true
+      UNITY_PASSWORD:
+        required: true
+    outputs:
+      build-path:
+        description: "Path to Unity build artifacts"
+        value: ${{ jobs.build.outputs.build-path }}
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  checks: write
+  actions: write
+
+jobs:
+  build:
+    name: Build unity project
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      # Cache
+      - uses: actions/cache@v3
+        with:
+          path: ${{ env.PROJECT_PATH }}/Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+
+      # Test
+      - name: Run tests
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          projectPath: ${{ env.PROJECT_PATH }}
+
+      # Check and Clean
+      - name: Check and Clean
+        run: |
+          git diff
+          git restore $PROJECT_PATH/Packages/*.json
+          git clean -fd $PROJECT_PATH/Packages
+
+      # Build
+      - name: Build project
+        uses: game-ci/unity-builder@v4
+        id: build
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: ${{ env.BUILD_TARGET }}
+          projectPath: ${{ env.PROJECT_PATH }}
+          buildsPath: ${{ env.BUILD_DIR }}
+          buildName: ${{ env.BUILD_NAME }}
+
+      # Cache
+      - name: Cache Unity build
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.BUILD_DIR }}/${{ env.BUILD_TARGET }}/${{ env.BUILD_NAME }}/Build
+          key: unity-build-${{ hashFiles(format('{0}/**', env.PROJECT_PATH)) }}
+
+      # Output
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unity-build
+          path: ${{ env.BUILD_DIR }}/${{ env.BUILD_TARGET }}/${{ env.BUILD_NAME }}/Build
+          retention-days: 1

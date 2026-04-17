@@ -71,41 +71,42 @@ func NewRouter(
 	guestGroup.Handle("/static/", http.StripPrefix(guestPath+"/static", http.HandlerFunc(fileHandler.Handle)))
 	adminRestGroup := adminGroup.Mount("/rest")
 	guestRestGroup := guestGroup.Mount("/rest")
+	adminRestGroup.Use(authorizeMiddleware.Handle)
 	guestRestGroup.Use(authorizeMiddleware.Handle)
 	adminRestGroup.Handle("GET /images", http.StripPrefix(adminPath+"/rest/images", http.HandlerFunc(imageHndler.Handle)))
 	guestRestGroup.Handle("GET /images", http.StripPrefix(guestPath+"/rest/images", http.HandlerFunc(imageHndler.Handle)))
 	// imageをuploadする必要があるのはゲストだけ
 	guestRestGroup.Handle("POST /images", http.StripPrefix(guestPath+"/rest/images", http.HandlerFunc(imageHndler.Handle)))
 
-	guestRpcGroup := guestGroup.Mount("/rpc")
+	guestRPCGroup := guestGroup.Mount("/rpc")
 	entryPath, entryHandler := entryv1connect.NewEntryServiceHandler(
 		entryServiceHandler,
 		// Validation via Protovalidate is almost always recommended
 		connect.WithInterceptors(validate.NewInterceptor()),
 	)
-	guestRpcGroup.Handle(entryPath, http.StripPrefix(guestPath+"/rpc", entryHandler))
+	guestRPCGroup.Handle(entryPath, http.StripPrefix(guestPath+"/rpc", entryHandler))
 	lobbyPath, lobbyHandler := lobbyv1connect.NewLobbyServiceHandler(
 		lobbyServiceHandler,
 		// Validation via Protovalidate is almost always recommended
 		connect.WithInterceptors(validate.NewInterceptor(), authorizeMiddleware),
 	)
-	guestRpcGroup.Handle(lobbyPath, http.StripPrefix(guestPath+"/rpc", lobbyHandler))
+	guestRPCGroup.Handle(lobbyPath, http.StripPrefix(guestPath+"/rpc", lobbyHandler))
 	questPath, questHandler := questv1connect.NewQuestServiceHandler(
 		questServiceHandler,
 		// Validation via Protovalidate is almost always recommended
 		connect.WithInterceptors(validate.NewInterceptor(), authorizeMiddleware),
 	)
-	guestRpcGroup.Handle(questPath, http.StripPrefix(guestPath+"/rpc", questHandler))
+	guestRPCGroup.Handle(questPath, http.StripPrefix(guestPath+"/rpc", questHandler))
 
-	adminRpcGroup := adminGroup.Mount("/rpc")
+	adminRPCGroup := adminGroup.Mount("/rpc")
 	// adminUserの登録にguestのentryServiceを流用
-	adminRpcGroup.Handle(entryPath, http.StripPrefix(adminPath+"/rpc", entryHandler))
+	adminRPCGroup.Handle(entryPath, http.StripPrefix(adminPath+"/rpc", entryHandler))
 	adminsPath, adminHandler := adminv1connect.NewAdminServiceHandler(
 		adminServiceHandler,
 		// Validation via Protovalidate is almost always recommended
 		connect.WithInterceptors(validate.NewInterceptor(), authorizeMiddleware, adminCheckMiddleware),
 	)
-	adminRpcGroup.Handle(adminsPath, http.StripPrefix(adminPath+"/rpc", adminHandler))
+	adminRPCGroup.Handle(adminsPath, http.StripPrefix(adminPath+"/rpc", adminHandler))
 
 	return &Router{
 		router:    router,

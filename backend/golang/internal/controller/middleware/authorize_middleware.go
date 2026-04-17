@@ -16,7 +16,11 @@ const HeaderKey string = "Authorization"
 type UserContextKey struct{}
 
 func GetUserFromCtx(ctx context.Context) *model.User {
-	return ctx.Value(UserContextKey{}).(*model.User)
+	user, ok := ctx.Value(UserContextKey{}).(*model.User)
+	if !ok {
+		return nil
+	}
+	return user
 }
 
 type IUserRepository interface {
@@ -48,6 +52,7 @@ func (am *AuthorizeMiddleware) Handle(next http.Handler) http.Handler {
 		user, err := am.authByRequestHeader(authHeader)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
 		}
 
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), UserContextKey{}, user)))

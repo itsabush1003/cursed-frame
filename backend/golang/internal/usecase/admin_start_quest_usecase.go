@@ -103,7 +103,7 @@ checkConnectionLoop:
 				ImageID:      imageID,
 				TeamID:       core.TeamID(tid),
 				QuestionID:   question.GetQuestionID(),
-				QuestionText: question.GetQuestionText(),
+				QuestionText: question.GetQuizText(),
 				Choices:      make([]core.Choice, len(choiceCandidates)),
 			}
 			var correctChoiceID uint
@@ -136,7 +136,7 @@ checkConnectionLoop:
 					canCountdown = true
 				case <-ticker.C:
 					quiz.RemainedTime = remaindTime
-					asqu.gm.Broadcast(uid, quiz, core.Choice{
+					_ = asqu.gm.Broadcast(uid, quiz, core.Choice{
 						ChoiceID:   correctChoiceID,
 						ChoiceText: correctProfile[0].GetAnswer(),
 					})

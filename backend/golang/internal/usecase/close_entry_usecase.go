@@ -14,9 +14,6 @@ type CloseEntryUsecase struct {
 }
 
 func (ceu *CloseEntryUsecase) Execute() error {
-	if err := ceu.gm.CloseLobby(); err != nil {
-		return err
-	}
 	userIDs := ceu.gm.GetLobbyUsers()
 	users, err := ceu.ur.FetchByUserIDs(userIDs)
 	if err != nil {
@@ -27,6 +24,10 @@ func (ceu *CloseEntryUsecase) Execute() error {
 		if !user.GetIsReady() {
 			return errors.New("Some users have not been ready yet")
 		}
+	}
+
+	if err := ceu.gm.CloseLobby(); err != nil {
+		return err
 	}
 
 	userTeam := ceu.gm.SplitTeams(userIDs, ceu.teamNum)
@@ -44,7 +45,7 @@ func (ceu *CloseEntryUsecase) Execute() error {
 		return err
 	}
 
-	ceu.gm.NotifyLobbyClosed()
+	_ = ceu.gm.NotifyLobbyClosed()
 	return nil
 }
 

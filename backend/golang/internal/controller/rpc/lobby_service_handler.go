@@ -36,7 +36,7 @@ func (lsh *LobbyServiceHandler) JoinLobby(ctx context.Context, r *connect.Reques
 			})
 		},
 		func() {
-			stream.Send(&lobbyv1.LobbyStatus{
+			_ = stream.Send(&lobbyv1.LobbyStatus{
 				IsAllReady: true,
 			})
 		},

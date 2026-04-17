@@ -6563,7 +6563,8 @@ MonoBehaviour:
   profileImageMaterial: {fileID: 2100000, guid: 0546161ba4559d240b8d1ffe3320d1e7, type: 2}
   cameraController: {fileID: 963194230}
   magiciansController: {fileID: 1500876439}
-  debugTeamId: 4
+  damageStrength: {x: 0.12, y: 0.12, z: 0.025}
+  debugTeamId: 0
 --- !u!4 &1532828228 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5777086575948112761, guid: e9679e986e0fa644c9e957a8ada8abd1, type: 3}

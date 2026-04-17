@@ -5,7 +5,7 @@ import (
 	"github.com/itsuabush1003/cursed-frame/backend/golang/internal/model"
 )
 
-const NoMoreQuestionText string = "これで質問は全て終わりです。御回答ありがとうございました。ゲーム開始まで暫くお待ちください。"
+const NoMoreQuestionText string = "これで質問は全て終わりです。\n御回答ありがとうございました。\nゲーム開始まで暫くお待ちください。"
 
 type ProfileQuestionDTO struct {
 	QuestionID   uint

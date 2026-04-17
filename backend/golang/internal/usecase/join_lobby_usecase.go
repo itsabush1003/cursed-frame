@@ -35,13 +35,13 @@ func (jlu *JoinLobbyUsecase) Execute(
 			doneCallback()
 			return nil
 		case <-networkCtx.Done():
-			jlu.gm.DisconnectLobby(uid)
+			_ = jlu.gm.DisconnectLobby(uid)
 			return failedCallback(networkCtx.Err())
 		case <-ticker.C:
 			if err := onTick(); err != nil {
 				onTickFailedCount++
 				if onTickFailedCount > MaxFailedCount {
-					jlu.gm.DisconnectLobby(uid)
+					_ = jlu.gm.DisconnectLobby(uid)
 					return failedCallback(err)
 				}
 			} else {

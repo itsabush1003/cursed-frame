@@ -52,6 +52,7 @@ message TeamAnswer {
 
 message CheckAnswersResponse {
   repeated TeamAnswer answers = 1;
+  common.v1.Choice correct_choice = 2;
 }
 
 message UserStats {

@@ -30,6 +30,19 @@ import type { StartQuestResponse as guestResponse } from "@/gen/quest/v1/quest_p
   End: "stream end"
 } as const;*/
 
+export interface eventController {
+  eventSender: {
+    ChangeTargetTeam: (teamId: number) => void;
+    SetNextTarget: (targetImagePath: string) => void;
+    StartAttackAnimation: (isCorrect: boolean[]) => void;
+  };
+  registEventReceiver: {
+    RegistTeamChanged: (callback: () => void) => () => void;
+    RegistTargetChanged: (callback: () => void) => () => void;
+    RegistAttackEnd: (callback: () => void) => () => void;
+  };
+}
+
 interface quiz {
   questionId: number;
   quizText: string;
@@ -41,8 +54,15 @@ interface quiz {
 }
 
 const uiAnimateDuration: number = 500;
+const answerResultAnimationSec: number = 3;
 
-const QuizPage = ({ toNext }: { toNext: () => void }) => {
+const QuizPage = ({
+  toNext,
+  eventController,
+}: {
+  toNext: () => void;
+  eventController: eventController;
+}) => {
   const [remainTime, setRemainTime] = useState<number>(MaxRemainTime);
   const [isEnableAnswer, setIsEnableAnswer] = useState<boolean>(false);
   const [showQuiz, setShowQuiz] = useState<boolean>(false);
@@ -62,7 +82,7 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
   const { userStatus } = useContext(UserStatusContext);
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const choiceRef = useRef<ChoiceRef | null>(null);
-  const client = useRpcClient();
+  const client = useRpcClient(userStatus.type);
   const callAnswerApi = useCallback(async () => {
     if ("checkAnswers" in client) {
       // adminの場合
@@ -71,9 +91,7 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
         (map, answer) =>
           answer.answer !== undefined
             ? (map.has(answer.answer.choiceId)
-                ? map
-                    .get(answer.answer.choiceId)
-                    ?.push(answer.teamColor)
+                ? map.get(answer.answer.choiceId)?.push(answer.teamColor)
                 : map.set(answer.answer.choiceId, [answer.teamColor]),
               map)
             : map,
@@ -81,15 +99,25 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
       );
       setAnswerMap(answers);
       setResults(response.answers.map((answer) => answer.isCorrect));
+      if (response.correctChoice) {
+        choiceRef.current?.setSelected({
+          id: response.correctChoice.choiceId,
+          text: response.correctChoice.choiceText,
+        });
+      }
     } else if ("answer" in client) {
       // guestの場合
       let selectedChoice = choiceRef.current?.getSelected();
       if (!selectedChoice) {
+        // 時間内にいずれの選択肢も選んでいない場合、ランダムに選ぶ
         selectedChoice =
           currentQuiz.choices[
             Math.floor(Math.random() * currentQuiz.choices.length)
           ];
+        if (currentQuiz.canAnswer) {
+          // 回答可能だったけど時間切れになった場合、ランダムに選ばれた回答がどれかをユーザに知らせる
         choiceRef.current?.setSelected(selectedChoice);
+        }
       }
       const response = await client.answer(
         currentQuiz.questionId,
@@ -123,13 +151,11 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
         } else {
           setAnswerMap(undefined);
           if (prev.teamId !== response.targetTeamId) {
-            setTimeout(() => {
-              setShowQuiz(true);
-              if ("readyQuiz" in client) client.readyQuiz({});
-            }, 1000);
+            eventController.eventSender.ChangeTargetTeam(response.targetTeamId);
           } else {
-            setShowQuiz(true);
-            if ("readyQuiz" in client) client.readyQuiz({});
+            eventController.eventSender.SetNextTarget(
+              response.targetUserImageId,
+            );
           }
           setIsEnableAnswer(true);
           return {
@@ -153,7 +179,7 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
         });
       }
     },
-    [answer],
+    [answer, eventController.eventSender],
   );
   const isQuizEnd = useStreamObserver(streamFunc, callBack);
 
@@ -161,26 +187,62 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
     if (answerMap !== undefined) {
       setTimeout(() => {
         setShowQuiz(false);
-        if ("nextQuiz" in client) {
-          setTimeout(() => client.nextQuiz({}), 3000);
+        if (results.length > 0) {
+          setResults([]);
+          eventController.eventSender.StartAttackAnimation(results);
         }
-      }, 3000);
+      }, answerResultAnimationSec * 1000);
     } else if (!error) {
       console.log(error);
     }
-  }, [answerMap, error, client]);
+  }, [
+    answerMap,
+    error,
+    client,
+    eventController.eventSender,
+    eventController.registEventReceiver,
+    results,
+  ]);
 
   useEffect(() => {
     if (showQuiz) {
       const id = setInterval(() => {
-        setRemainTime((prev) => prev - 0.1);
+        setRemainTime((prev) => (prev >= 0 ? prev - 0.1 : prev));
       }, 100);
       return () => clearInterval(id);
     }
   }, [showQuiz]);
 
+  useEffect(() => {
+    const cleanTeamChangeEvent =
+      eventController.registEventReceiver.RegistTeamChanged(() =>
+        eventController.eventSender.SetNextTarget(currentQuiz.imageId),
+      );
+    const cleanTargetChangeEvent =
+      eventController.registEventReceiver.RegistTargetChanged(() => {
+        setShowQuiz(true);
+        if ("readyQuiz" in client) client.readyQuiz({});
+      });
+    const cleanAttackEndEvent =
+      eventController.registEventReceiver.RegistAttackEnd(() => {
+        if ("nextQuiz" in client) client.nextQuiz({});
+      });
+
+    return () => {
+      cleanTeamChangeEvent();
+      cleanTargetChangeEvent();
+      cleanAttackEndEvent();
+    };
+  }, [
+    eventController.eventSender,
+    eventController.registEventReceiver,
+    currentQuiz,
+    client,
+  ]);
+
   return (
     <>
+      {isQuizEnd && <button onClick={toNext}>結果を見る</button>}
       <CSSTransition
         nodeRef={nodeRef}
         classNames="answers"
@@ -222,7 +284,8 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
                         : "var(--main-color-1-dark)",
                     }}
                     css={css`
-                      animation: ${animation} 3s linear;
+                      animation: ${animation} ${answerResultAnimationSec}s
+                        linear;
                     `}
                   >
                     {results[0] ? "正解" : "不正解"}
@@ -233,7 +296,6 @@ const QuizPage = ({ toNext }: { toNext: () => void }) => {
           )}
         </div>
       </CSSTransition>
-      {isQuizEnd && <button onClick={toNext}>結果を見る</button>}
     </>
   );
 };
@@ -284,7 +346,7 @@ const maskStyle = css`
   height: 100%;
   border: none;
   border-radius: 6px;
-  background-color: rgba(64, 64, 64, 0.8);
+  background-color: rgba(64, 64, 64, 0.6);
   align-content: center;
   justify-content: center;
   z-index: 100;

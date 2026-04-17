@@ -23,6 +23,6 @@ func (rlm *RateLimitMiddleware) Handle(next http.Handler) http.Handler {
 
 func NewRateLimitMiddleware(userNum int) *RateLimitMiddleware {
 	return &RateLimitMiddleware{
-		limiter: rate.NewLimiter(rate.Limit(userNum * 5), userNum * 20),
+		limiter: rate.NewLimiter(rate.Limit(userNum*5), userNum*20),
 	}
 }

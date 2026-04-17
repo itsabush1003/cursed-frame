@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 using DG.Tweening;
@@ -11,16 +12,18 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Material profileImageMaterial = null;
     [SerializeField] private CameraController cameraController;
     [SerializeField] private MagiciansController magiciansController;
+    [SerializeField] private Vector3 damageStrength = new Vector3(0.1f, 0.1f, 0.02f);
     [SerializeField] private int debugTeamId = 0;
     private MessageLiaison liaison = null;
-    private int currentTargetTeamId = 0;
+    private Tweener enemyIdleMotion = null;
+    private int currentTargetTeamId = -1;
 
     // Start is called before the first frame update
     void Start()
     {
         bool alreadyPrepared = liaison != null;
         liaison = GameObject.FindWithTag("MessageLiaison")?.GetComponent<MessageLiaison>();
-        enemyObject.transform.DOMove(Vector3.up * 0.3f, 2.0f).SetRelative(true).SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo);
+        enemyIdleMotion = enemyObject.transform.DOMove(Vector3.up * 0.3f, 2.0f).SetRelative(true).SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo);
 # if UNITY_EDITOR
         if (!alreadyPrepared) StartPrepareAnimation();
 # endif
@@ -111,7 +114,8 @@ public class GameManager : MonoBehaviour
         enemyObject.transform.DOPause();
         Transform originalPosition = enemyObject.transform;
         Sequence sequence = DOTween.Sequence()
-            .Append(enemyObject.transform.DOShakeRotation(1.0f, new Vector3(5.0f, 5.0f, 30.0f), 10, 90.0f));
+            .Append(enemyObject.transform.DOShakeRotation(1.0f, new Vector3(5.0f, 5.0f, 30.0f), 10, 90.0f))
+            .Join(profileImageMaterial.DOColor(Color.black, "_Color", 1.0f));
         if (currentTargetTeamId == myTeamId)
         {
             sequence.Join(cameraController.ReleaseAnimation());
@@ -140,7 +144,22 @@ public class GameManager : MonoBehaviour
     /// <param name="callback">アニメーション終了時に呼ばれるコールバック関数</param>
     public void StartAttackAnimation(bool[] isCorrects, Action callback = null)
     {
-        magiciansController.StartAttackAnimation(liaison?.GetTeamId() ?? debugTeamId, currentTargetTeamId, enemyObject.transform.position + Vector3.right, isCorrects);
+        enemyIdleMotion.Pause();
+        int damageFactor = isCorrects.Aggregate(0, (sum, x) => x ? sum+=1 : sum);
+        magiciansController.StartAttackAnimation(liaison?.GetTeamId() ?? debugTeamId, currentTargetTeamId, enemyObject.transform.position + Vector3.right, isCorrects, () => BuildDamagedAnimation(damageFactor), () => {
+            enemyIdleMotion.Play();
+            callback?.Invoke();
+            });
+    }
+
+    /// <summary>
+    /// 攻撃を受けたときのEnemyのアニメーションを生成する関数
+    /// </summary>
+    /// <param name="damageFactor">ダメージの大きさを反映させる係数</param>
+    /// <returns>攻撃を受けたときのEnemyのアニメーション</returns>
+    private Tweener BuildDamagedAnimation(int damageFactor)
+    {
+        return enemyObject.transform.DOShakePosition(1.0f, damageStrength * damageFactor, 30, 90.0f);
     }
 
     /// <summary>

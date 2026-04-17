@@ -6,13 +6,13 @@ type CheckAnswersUsecase struct {
 	gm *core.GameManager
 }
 
-func (cau *CheckAnswersUsecase) Execute() (map[core.TeamID]core.Result, error) {
+func (cau *CheckAnswersUsecase) Execute() (map[core.TeamID]core.Result, core.Choice, error) {
 	teamResult, answerMap, err := cau.gm.CollectAnswer()
 	if err != nil {
-		return nil, err
+		return nil, core.Choice{}, err
 	}
-	cau.gm.DistributeAnswer(teamResult, answerMap)
-	return teamResult, nil
+	_ = cau.gm.DistributeAnswer(teamResult, answerMap)
+	return teamResult, cau.gm.GetCurrentAnswer(), nil
 }
 
 func NewCheckAnswersUsecase(gm *core.GameManager) *CheckAnswersUsecase {

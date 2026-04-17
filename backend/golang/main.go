@@ -69,14 +69,12 @@ func main() {
 		panic(err)
 	}
 	defer os.RemoveAll(imageDirname)
-	println(imageDirname)
 
 	dbDirname, err := os.MkdirTemp("", "db")
 	if err != nil {
 		panic(err)
 	}
 	defer os.RemoveAll(dbDirname)
-	println(dbDirname)
 
 	tlsConfig := &tls.Config{
 		MinVersion: tls.VersionTLS12,
@@ -153,7 +151,11 @@ func main() {
 	router := infra.NewRouter(fileHandler, imageHandler, entryServiceHandler, lobbyServiceHandler, questServiceHandler, adminServiceHandler, adminCheckMiddleware, authorizeMiddleware, rateLimitMiddleware, corsMiddleware)
 
 	server := infra.NewServer(":8888", tlsConfig, router)
-	println(fmt.Sprintf("Server started at :8888%s\n\tguest: %s", router.AdminPath, router.GuestPath))
+	domainStr := domain
+	if domainStr == "" {
+		domainStr = "<your_domain>"
+	}
+	println(fmt.Sprintf("Server started at\n\tadmin: %s:8888%s\n\tguest: %s:8888%s", domainStr, router.AdminPath, domainStr, router.GuestPath))
 	if err = server.ListenAndServe(); err != nil {
 		panic(err)
 	}

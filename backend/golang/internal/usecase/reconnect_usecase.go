@@ -28,10 +28,12 @@ func (ru *ReconnectUsecase) Execute(reconnectKey string) (token string, err erro
 		return "", err
 	}
 
-	if err := user.RefreshAccessToken(); err != nil {
+	if err = user.RefreshAccessToken(); err != nil {
 		return "", errors.ErrUnsupported
 	}
-	ru.ur.Save(user)
+	if err = ru.ur.Save(user); err != nil {
+		return "", err
+	}
 	return user.GetAccessToken(), nil
 }
 

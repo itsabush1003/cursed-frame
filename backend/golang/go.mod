@@ -11,9 +11,9 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	golang.org/x/crypto v0.49.0
-	golang.org/x/time v0.14.0
+	golang.org/x/time v0.15.0
 	google.golang.org/protobuf v1.36.11
-	modernc.org/sqlite v1.44.3
+	modernc.org/sqlite v1.48.0
 )
 
 require (
@@ -32,7 +32,7 @@ require (
 	golang.org/x/text v0.35.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250922171735-9219d122eba9 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250922171735-9219d122eba9 // indirect
-	modernc.org/libc v1.67.6 // indirect
+	modernc.org/libc v1.70.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )

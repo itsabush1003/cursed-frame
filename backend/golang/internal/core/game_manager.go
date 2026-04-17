@@ -55,10 +55,11 @@ type Quiz struct {
 }
 
 const (
-	MaxChoiceNum          int = 4
-	MaxHintLength         int = 30
-	InitialRemaindTime    int = 15
-	IncreaseTimeHintTaken int = 10
+	MaxChoiceNum          int           = 4
+	MaxHintLength         int           = 30
+	InitialRemaindTime    int           = 15
+	IncreaseTimeHintTaken int           = 10
+	WaitAnswerTimeout     time.Duration = 3 * time.Second
 )
 
 type questRoom struct {
@@ -67,6 +68,7 @@ type questRoom struct {
 	hintCh             chan string
 	answerListener     map[TeamID]chan Choice
 	answerSender       map[uuid.UUID]chan AnswerWithMap
+	abortAnswer        chan struct{}
 	startCountNotifier chan struct{}
 	nextQuizNotifier   chan struct{}
 	mu                 sync.RWMutex
@@ -121,7 +123,7 @@ func (qr *questRoom) CollectAnswer() (map[TeamID]Choice, map[TeamID]map[uint]int
 	for tid := range qr.teams {
 		reporters[tid] = make(chan Choice, len(qr.teams[tid]))
 		wg.Go(func() {
-			timer := time.NewTimer(5 * time.Second)
+			timer := time.NewTimer(WaitAnswerTimeout)
 			defer timer.Stop()
 			defer close(reporters[tid])
 			for {
@@ -210,11 +212,17 @@ func (qr *questRoom) Connect(uid uuid.UUID) (context.Context, <-chan Quiz) {
 }
 
 func (qr *questRoom) Answer(tid TeamID, uid uuid.UUID, answer Choice) AnswerWithMap {
-	qr.mu.RLock()
-	defer qr.mu.RUnlock()
-	qr.answerListener[tid] <- answer
-	teamAnswer := <-qr.answerSender[uid]
-	return teamAnswer
+	select {
+	case qr.answerListener[tid] <- answer:
+	case <-time.After(WaitAnswerTimeout):
+		// 自分のAnswerを送るのに失敗してもチームのAnswerの受取を待つ
+	}
+	select {
+	case teamAnswer := <-qr.answerSender[uid]:
+		return teamAnswer
+	case <-qr.abortAnswer:
+		return AnswerWithMap{}
+	}
 }
 
 func (qr *questRoom) UpdatePersonalStats(uid uuid.UUID, answer Choice) {
@@ -384,6 +392,10 @@ func (gm *GameManager) StartCount() error {
 	if gm.state != INGAME {
 		return errors.New("Server is not in game mode")
 	}
+
+	// Answerの受付（正確には受付後のTeamAnswerの生成待ち）を可能にする
+	gm.room.abortAnswer = make(chan struct{})
+
 	select {
 	case gm.room.startCountNotifier <- struct{}{}:
 		return nil
@@ -396,6 +408,10 @@ func (gm *GameManager) CheckHint() <-chan string {
 	return gm.room.hintCh
 }
 
+func (gm *GameManager) GetCurrentAnswer() Choice {
+	return gm.room.currentAnswer
+}
+
 func (gm *GameManager) CollectAnswer() (map[TeamID]Result, map[TeamID]map[uint]int, error) {
 	if gm.state != INGAME {
 		return nil, nil, errors.New("Server is not in game mode")
@@ -406,7 +422,7 @@ func (gm *GameManager) CollectAnswer() (map[TeamID]Result, map[TeamID]map[uint]i
 	for tid, choice := range teamAnswers {
 		results[tid] = Result{
 			Answer:    choice,
-			IsCorrect: choice == gm.room.currentAnswer,
+			IsCorrect: choice == gm.GetCurrentAnswer(),
 		}
 	}
 	return results, teamAnswersMap, nil
@@ -428,7 +444,7 @@ func (gm *GameManager) DistributeAnswer(results map[TeamID]Result, answerMaps ma
 					AnswerMap:  am,
 				}:
 					return
-				case <-time.After(time.Second):
+				case <-time.After(2 * WaitAnswerTimeout):
 					return
 				}
 			}(gm.room.answerSender[user], result.Answer, answerMaps[tid])
@@ -441,6 +457,9 @@ func (gm *GameManager) NextQuiz() error {
 	if gm.state != INGAME {
 		return errors.New("Server is not in game mode")
 	}
+
+	// 通信遅れなどで残っているAnswerを強制終了
+	close(gm.room.abortAnswer)
 
 	select {
 	case gm.room.nextQuizNotifier <- struct{}{}:
@@ -555,9 +574,9 @@ func (gm *GameManager) Answer(uid uuid.UUID, tid TeamID, answer Choice) (AnswerW
 	teamAnswer := gm.room.Answer(tid, uid, answer)
 	gm.room.UpdatePersonalStats(uid, answer)
 	if teamAnswer.TeamAnswer.ChoiceID == 0 {
-		return teamAnswer, false, errors.New("team's answer cannot received.")
+		return teamAnswer, false, errors.New("team's answer cannot received")
 	}
-	return teamAnswer, teamAnswer.TeamAnswer.ChoiceID == gm.room.currentAnswer.ChoiceID, nil
+	return teamAnswer, teamAnswer.TeamAnswer.ChoiceID == gm.GetCurrentAnswer().ChoiceID, nil
 }
 
 func (gm *GameManager) GetResultStats(uid uuid.UUID, tid TeamID) (total float32, ps Stats, ts Stats, err error) {
@@ -613,6 +632,7 @@ func NewGameManager(maxUserNum int, teamNum int) *GameManager {
 				hintCh:             make(chan string),
 				answerListener:     make(map[TeamID]chan Choice, teamNum),
 				answerSender:       make(map[uuid.UUID]chan AnswerWithMap, maxUserNum),
+				abortAnswer:        make(chan struct{}),
 				startCountNotifier: make(chan struct{}),
 				nextQuizNotifier:   make(chan struct{}),
 				mu:                 sync.RWMutex{},
