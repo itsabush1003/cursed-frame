@@ -28,6 +28,10 @@ jobs:
         run: bun install
         working-directory: frontend/react/cursed-frame
 
+      - name: Run ESLint
+        run: bun run lint
+        working-directory: frontend/react/cursed-frame
+
       - name: Build React
         id: build
         run: |
