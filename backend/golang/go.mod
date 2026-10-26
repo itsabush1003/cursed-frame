@@ -3,7 +3,7 @@ module github.com/itsuabush1003/cursed-frame/backend/golang
 go 1.25.5
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.9-20250912141014-52f32327d4b0.1
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.9-20260415201107-50325440f8f2.1
 	connectrpc.com/connect v1.19.1
 	connectrpc.com/validate v0.6.0
 	github.com/go-pkgz/routegroup v1.6.0
